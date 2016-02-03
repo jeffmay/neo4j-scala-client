@@ -38,3 +38,34 @@ scalacOptions in ThisBuild := Seq(
   "-Xfuture"
 )
 
+lazy val cleanup = settingKey[Boolean]("Set to false to disable cleaning up after each test")
+cleanup := true
+addCommandAlias("cleanupOn", "set cleanup := true")
+addCommandAlias("cleanupOff", "set cleanup := false")
+
+// call setup and teardown hooks before and after any tests run
+testOptions ++= Seq(
+  Tests.Setup {
+    classLoader: ClassLoader =>
+      val cleanDBAfterTests = cleanup.value
+      sys.props += "NEO4J_TEST_CLEANUP_AFTER" -> cleanDBAfterTests.toString
+      if (cleanDBAfterTests) {
+        println(AnsiColor.GREEN +
+          """All tests will cleanup their changes to their namespace in the database after they finish.
+            |Note: The tests will cleanup their own namespace from previous test runs before they run.""".stripMargin
+          + AnsiColor.RESET)
+      }
+      else {
+        // This can cause tests to fail on the second run
+        println(AnsiColor.BLUE +
+          """Tests will NOT cleanup their changes to their namespace in the database after they finish.
+            |Note: The tests will cleanup their own namespace from previous test runs before they run.""".stripMargin
+          + AnsiColor.RESET)
+      }
+      classLoader.loadClass("me.jeffmay.neo4j.client.SetupBeforeTests").newInstance()
+  },
+  Tests.Cleanup {
+    classLoader: ClassLoader =>
+      classLoader.loadClass("me.jeffmay.neo4j.client.CleanupAfterTests").newInstance()
+  }
+)
