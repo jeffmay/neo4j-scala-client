@@ -11,6 +11,13 @@ licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache-2.0"))
 bintraySettings
 bintrayPublishSettings
 
+// Don't publish tests.jar
+publishArtifact in Test := false
+// Don't compile or publish ScalaDoc
+// (ScalaDoc compiler breaks on links and the source code comments are more valuable)
+sources in(Compile, doc) := Seq.empty
+publishArtifact in (Compile, packageDoc) := false
+
 val playVersion = "2.4.6"
 val scalacheckVersion = "1.12.5"
 val scalatestVersion = "3.0.0-M10"
