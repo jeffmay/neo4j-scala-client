@@ -1,17 +1,21 @@
-
 name := "neo4j-scala-client"
-
 organization := "me.jeffmay"
+organizationName := "Jeff May"
 
+version := "0.1.0"
 scalaVersion := "2.11.7"
+
+// Publish to https://bintray.com/jeffmay/maven
+bintraySettings
+bintrayPublishSettings
 
 val playVersion = "2.4.6"
 val scalacheckVersion = "1.12.5"
 val scalatestVersion = "3.0.0-M10"
 
 resolvers ++= Seq(
-  "Artima Maven Repository" at "http://repo.artima.com/releases",
-  "jeffmay" at "http://dl.bintray.com/jeffmay/maven"
+  "jeffmay" at "http://dl.bintray.com/jeffmay/maven",
+  "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/"
 )
 
 libraryDependencies ++= Seq(
@@ -56,7 +60,6 @@ testOptions ++= Seq(
           + AnsiColor.RESET)
       }
       else {
-        // This can cause tests to fail on the second run
         println(AnsiColor.BLUE +
           """Tests will NOT cleanup their changes to their namespace in the database after they finish.
             |Note: The tests will cleanup their own namespace from previous test runs before they run.""".stripMargin
@@ -69,3 +72,4 @@ testOptions ++= Seq(
       classLoader.loadClass("me.jeffmay.neo4j.client.CleanupAfterTests").newInstance()
   }
 )
+
