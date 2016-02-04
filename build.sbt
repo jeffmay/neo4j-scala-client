@@ -5,6 +5,8 @@ organizationName := "Jeff May"
 version := "0.1.0"
 scalaVersion := "2.11.7"
 
+licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache-2.0"))
+
 // Publish to https://bintray.com/jeffmay/maven
 bintraySettings
 bintrayPublishSettings
