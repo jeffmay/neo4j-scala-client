@@ -33,7 +33,8 @@ sealed abstract class ResponseError(
     |$indentedResponseHeaders
     |Received response with status code $responseStatus and response body:
     |${shim(responseBodyAsString)}
-    |Reason: ${shim(message)}
+    |Reason:
+    |${shim(message)}
   """.stripMargin
 }) with NoStackTrace
 
