@@ -52,11 +52,9 @@ lazy val commonSettings = commonRootSettings ++ Seq(
     "org.scalatest" %% "scalatest" % scalatestVersion % "test"
   ),
 
-  // Avoid sbt warnings for these libraries
+  // Avoid sbt warnings for these transitive dependencies getting evicted
   dependencyOverrides := Set(
-    "com.typesafe.play" %% "play-json" % playVersion,
-    "com.google.guava" % "guava" % "18.0",
-    "org.scalactic" %% "scalactic" % scalatestVersion
+    "com.google.guava" % "guava" % "18.0"
   ),
 
   // Don't publish tests.jar
@@ -68,7 +66,9 @@ lazy val commonSettings = commonRootSettings ++ Seq(
 
 ) ++
   // Publish to https://bintray.com/jeffmay/maven
-  bintraySettings ++ bintrayPublishSettings
+  bintraySettings ++ bintrayPublishSettings ++ Seq(
+    credentials := List(Path.userHome / ".bintray" / ".credentials").filter(_.exists).map(Credentials(_))
+  )
 
 lazy val core = (project in file("core")).settings(commonSettings ++ Seq(
   name := "neo4j-scala-client-core"
