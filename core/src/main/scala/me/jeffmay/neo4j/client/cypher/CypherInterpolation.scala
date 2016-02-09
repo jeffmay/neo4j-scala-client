@@ -16,7 +16,9 @@ class CypherStringContext(val sc: StringContext) extends AnyVal {
     *
     * @return a [[Statement]] with the concatenated template and the the template and parameters
     *         of the [[Statement]].
+    *
     * @throws InvalidCypherException if any of the args are [[CypherResultInvalid]]
+    * @throws DuplicatePropertyNameException if two [[CypherParam]]s share the same namespace and property name
     */
   def cypher(args: CypherResult[CypherArg]*): Statement = {
     // Build the literal query string
@@ -45,9 +47,9 @@ class CypherStringContext(val sc: StringContext) extends AnyVal {
       .groupBy(_.namespace)
       .map { case (namespace, fields) =>
         val props: CypherProps = fields.groupBy(_.id).map { case (name, values) =>
-          // TODO: Provide better error message by pointing to location in query where the error occurs
-          // Use Li Haoyi's sourcecode macros?
-          require(values.tail.isEmpty, s"'$name' has already been defined for the props object named '$namespace'")
+          if (values.tail.nonEmpty) {
+            throw new DuplicatePropertyNameException(namespace, name, template)
+          }
           name -> values.head.value
         }
         namespace -> props
