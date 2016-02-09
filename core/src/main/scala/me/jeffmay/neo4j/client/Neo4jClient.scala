@@ -20,6 +20,8 @@ trait Neo4jClient {
   // TODO: Use a single statement return type
   def commitTxn(ref: TxnRef, alongWith: Statement*): Future[CommittedTxnResponse]
 
+  // TODO: How to append to a transaction?
+
   def withStatsIncludedByDefault(includeStatsByDefault: Boolean): Neo4jClient
 
   def withBaseUrl(baseUrl: String): Neo4jClient

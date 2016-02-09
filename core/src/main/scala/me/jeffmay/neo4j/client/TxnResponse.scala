@@ -98,10 +98,10 @@ object CommittedTxnResponse {
 /**
   * Represents the transaction info
   *
-  * @param txn the reference of the transaction
+  * @param ref the reference of the transaction
   * @param expires when the transaction expires
   */
-case class TxnInfo(txn: TxnRef, expires: DateTime)
+case class TxnInfo(ref: TxnRef, expires: DateTime)
 
 object TxnInfo {
   implicit val jsonWriter: Writes[TxnInfo] = Json.writes[TxnInfo]
