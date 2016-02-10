@@ -1,7 +1,7 @@
 package me.jeffmay.neo4j.client.cypher
 
 import scala.language.implicitConversions
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 /**
   * A container for the success or failure to build a Cypher argument.
@@ -32,6 +32,7 @@ case class CypherResultValid[+T <: CypherArg](result: T) extends CypherResult[T]
   final override def getOrThrow: T = result
 }
 
+// TODO: Use compile-time exception information?
 /**
   * A [[CypherResult]] that did not meet the pre-conditions.
   *
@@ -52,12 +53,28 @@ sealed trait InvalidCypherArg {
 }
 
 /**
+  * The base trait for error messages dealing with an invalid format when building the Cypher query string.
+  */
+sealed trait InvalidCypherArgFormat extends InvalidCypherArg {
+  def literal: String
+}
+
+/**
+  * Could not construct a [[CypherIdentifier]] because the provided label name did not match the required format.
+  *
+  * @param literal the invalid identifier name used
+  */
+case class CypherIdentifierInvalidFormat(literal: String) extends InvalidCypherArgFormat {
+  override def message: String = s"Invalid identifier format '$literal'. Must match /${CypherIdentifier.Valid.pattern.pattern}/"
+}
+
+/**
   * Could not construct a [[CypherLabel]] because the provided label name did not match the required format.
   *
-  * @param label the invalid label name used
+  * @param literal the invalid label name used
   */
-case class CypherLabelInvalidFormat(label: String) extends InvalidCypherArg {
-  override def message: String = s"Invalid Label format '$label'. Must match /${CypherLabel.Valid.pattern.pattern}/"
+case class CypherLabelInvalidFormat(literal: String) extends InvalidCypherArgFormat {
+  override def message: String = s"Invalid label format '$literal'. Must match /${CypherLabel.Valid.pattern.pattern}/"
 }
 
 /**
@@ -81,16 +98,43 @@ sealed trait CypherArg {
   *
   * @param template the literal value to insert into the [[Statement.template]].
   */
-sealed abstract class CypherLiteral(override val template: String) extends CypherArg with Proxy {
+sealed abstract class CypherTemplatePart(override val template: String) extends CypherArg with Proxy {
   override def self: Any = template
+}
+
+/**
+  * An identifier to refer to nodes, relationships, or paths in a pattern.
+  *
+  * @see <a href="http://neo4j.com/docs/stable/cypher-identifiers.html">Cypher Identifiers</a>
+  *
+  * @param name the name of the identifier
+  */
+final class CypherIdentifier private (name: String) extends CypherTemplatePart(name)
+object CypherIdentifier {
+
+  val Valid = "^[a-zA-Z][a-zA-Z0-9_]*$".r
+
+  def isValid(literal: String): Boolean = {
+    Valid.findFirstMatchIn(literal).isDefined
+  }
+
+  def apply(literal: String): CypherResult[CypherIdentifier] = {
+    if (isValid(literal)) {
+      CypherResultValid(new CypherIdentifier(literal))
+    } else {
+      CypherResultInvalid(CypherIdentifierInvalidFormat(literal))
+    }
+  }
 }
 
 /**
   * A label to add to either a node or relationship.
   *
+  * @see <a href="http://neo4j.com/docs/stable/graphdb-neo4j.html#graphdb-neo4j-labels">Label Documentation</a>
+  *
   * @param name the name of the label (without the preceding colon ':')
   */
-final class CypherLabel private (name: String) extends CypherLiteral(s":$name")
+final class CypherLabel private (name: String) extends CypherTemplatePart(s":$name")
 object CypherLabel {
 
   val Valid = "^[a-zA-Z0-9_]+$".r
@@ -108,7 +152,6 @@ object CypherLabel {
         validated += label -> valid
         CypherResultValid(valid)
       } else {
-        // TODO: Use compile-time exception information?
         CypherResultInvalid(CypherLabelInvalidFormat(label))
       }
     }
