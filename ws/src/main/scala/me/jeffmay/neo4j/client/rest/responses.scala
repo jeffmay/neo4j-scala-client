@@ -1,7 +1,7 @@
 package me.jeffmay.neo4j.client.rest
 
 import me.jeffmay.neo4j.client._
-import me.jeffmay.neo4j.client.cypher.Statement
+import me.jeffmay.neo4j.client.cypher.CypherStatement
 import org.joda.time.DateTime
 import play.api.libs.json._
 
@@ -113,7 +113,7 @@ private[client] object RawTxnInfo {
 }
 
 /**
-  * Stats about the result of running a single [[Statement]].
+  * Stats about the result of running a single [[CypherStatement]].
   */
 private[client] case class RawResultStats(
   contains_updates: Boolean,
@@ -156,7 +156,7 @@ private[client] object RawResultStats {
 }
 
 /**
-  * The result of running a single [[Statement]]
+  * The result of running a single [[CypherStatement]]
   */
 private[client] case class RawStatementResult(
   columns: Seq[String],

@@ -3,7 +3,7 @@ package me.jeffmay.neo4j.client.ws
 import akka.actor.Scheduler
 import me.jeffmay.neo4j.client
 import me.jeffmay.neo4j.client._
-import me.jeffmay.neo4j.client.cypher.Statement
+import me.jeffmay.neo4j.client.cypher.CypherStatement
 import me.jeffmay.neo4j.client.StatusCodeException
 import me.jeffmay.neo4j.client.rest._
 import me.jeffmay.util.ws.{ProxyWSClient, TimeoutWSRequest}
@@ -74,7 +74,7 @@ class WSNeo4jClient(
       .map(_ => ())
   }
 
-  override def openTxn(statements: Statement*): Future[OpenedTxnResponse] = {
+  override def openTxn(statements: CypherStatement*): Future[OpenedTxnResponse] = {
     val rawBody = RawStatementTransactionRequest.fromCypherStatements(statements)
     val jsonBody = Json.toJson(rawBody)
     val request = http("/db/data/transaction")
@@ -90,7 +90,7 @@ class WSNeo4jClient(
     }
   }
 
-  override def openAndCommitTxn(first: Statement, others: Statement*): Future[CommittedTxnResponse] = {
+  override def openAndCommitTxn(first: CypherStatement, others: CypherStatement*): Future[CommittedTxnResponse] = {
     val rawBody = RawStatementTransactionRequest.fromCypherStatements(first +: others)
     val jsonBody = Json.toJson(rawBody)
     val request = http("/db/data/transaction/commit")
@@ -109,7 +109,7 @@ class WSNeo4jClient(
     }
   }
 
-  override def commitTxn(ref: TxnRef, alongWith: Statement*): Future[CommittedTxnResponse] = {
+  override def commitTxn(ref: TxnRef, alongWith: CypherStatement*): Future[CommittedTxnResponse] = {
     val rawBody = RawStatementTransactionRequest.fromCypherStatements(alongWith)
     val jsonBody = Json.toJson(rawBody)
     val request = http("/db/data/transaction")

@@ -1,7 +1,7 @@
 package me.jeffmay.neo4j.client.cypher
 
 /**
-  * An exception thrown when there is an error constructing a [[CypherArg]] or [[Statement]].
+  * An exception thrown when there is an error constructing a [[CypherArg]] or [[CypherStatement]].
   */
 sealed abstract class CypherException(message: String) extends Exception(message)
 

@@ -10,17 +10,15 @@ trait CypherInterpolation {
 class CypherStringContext(val sc: StringContext) extends AnyVal {
 
   /**
-    * Build a cypher [[Statement]] by interpolating the given [[CypherArg]]s.
+    * Build a cypher [[CypherStatement]] by interpolating the given [[CypherArg]]s.
     *
     * @param args the [[CypherResult]]s from which to extract the [[CypherArg]]s
-    *
-    * @return a [[Statement]] with the concatenated template and the the template and parameters
-    *         of the [[Statement]].
-    *
+    * @return a [[CypherStatement]] with the concatenated template and the the template and parameters
+    *         of the [[CypherStatement]].
     * @throws InvalidCypherException if any of the args are [[CypherResultInvalid]]
     * @throws DuplicatePropertyNameException if two [[CypherParam]]s share the same namespace and property name
     */
-  def cypher(args: CypherResult[CypherArg]*): Statement = {
+  def cypher(args: CypherResult[CypherArg]*): CypherStatement = {
     // Build the literal query string
     var count: Int = 0
     val tmplParts: Seq[String] = args.map {
@@ -54,6 +52,6 @@ class CypherStringContext(val sc: StringContext) extends AnyVal {
         }
         namespace -> props
       }
-    Statement(template, params)
+    CypherStatement(template, params)
   }
 }

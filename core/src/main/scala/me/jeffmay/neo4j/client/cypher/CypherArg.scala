@@ -79,7 +79,7 @@ case class CypherLabelInvalidFormat(literal: String) extends InvalidCypherArgFor
 
 /**
   * A valid argument to pass into the [[CypherStringContext]] used to insert some literal string or parameter(s)
-  * into a Cypher [[Statement]].
+  * into a Cypher [[CypherStatement]].
   */
 sealed trait CypherArg {
 
@@ -96,7 +96,7 @@ sealed trait CypherArg {
 /**
   * A literal string to insert into the Cypher string.
   *
-  * @param template the literal value to insert into the [[Statement.template]].
+  * @param template the literal value to insert into the [[CypherStatement.template]].
   */
 sealed abstract class CypherTemplatePart(override val template: String) extends CypherArg with Proxy {
   override def self: Any = template
@@ -106,7 +106,6 @@ sealed abstract class CypherTemplatePart(override val template: String) extends 
   * An identifier to refer to nodes, relationships, or paths in a pattern.
   *
   * @see <a href="http://neo4j.com/docs/stable/cypher-identifiers.html">Cypher Identifiers</a>
-  *
   * @param name the name of the identifier
   */
 final class CypherIdentifier private (name: String) extends CypherTemplatePart(name)
@@ -131,7 +130,6 @@ object CypherIdentifier {
   * A label to add to either a node or relationship.
   *
   * @see <a href="http://neo4j.com/docs/stable/graphdb-neo4j.html#graphdb-neo4j-labels">Label Documentation</a>
-  *
   * @param name the name of the label (without the preceding colon ':')
   */
 final class CypherLabel private (name: String) extends CypherTemplatePart(s":$name")
@@ -159,7 +157,7 @@ object CypherLabel {
 }
 
 /**
-  * Holds a single parameter in the [[Statement.parameters]].
+  * Holds a single parameter in the [[CypherStatement.parameters]].
   *
   * @note This is not constructed directly. Rather, you use the [[Cypher.params]] methods to build this.
   * @param namespace the key of the [[CypherProps]] within which field names are unique

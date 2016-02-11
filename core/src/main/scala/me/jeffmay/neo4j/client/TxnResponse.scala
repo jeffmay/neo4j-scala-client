@@ -1,11 +1,11 @@
 package me.jeffmay.neo4j.client
 
-import me.jeffmay.neo4j.client.cypher.Statement
+import me.jeffmay.neo4j.client.cypher.CypherStatement
 import org.joda.time.DateTime
 import play.api.libs.json._
 
 /**
-  * Represents the results of executing a batch of [[Statement]]s.
+  * Represents the results of executing a batch of [[CypherStatement]]s.
   */
 sealed trait TxnResponse {
 
@@ -37,12 +37,12 @@ sealed trait TxnResponse {
   def safeToRetry: Boolean = results.forall(_.data.isEmpty) && errors.forall(_.status.safeToRetry)
 
   /**
-    * The results of executing the [[Statement]]s returned in the same order as given.
+    * The results of executing the [[CypherStatement]]s returned in the same order as given.
     */
   def results: Seq[StatementResult]
 
   /**
-    * All the errors encountered when executing the [[Statement]]s within a transaction.
+    * All the errors encountered when executing the [[CypherStatement]]s within a transaction.
     */
   def errors: Seq[Neo4jError]
 

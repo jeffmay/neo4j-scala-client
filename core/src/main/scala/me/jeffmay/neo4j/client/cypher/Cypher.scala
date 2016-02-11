@@ -44,7 +44,7 @@ object Cypher {
     * }}}
     *
     * @param namespace the name of the parameters object as sent to the server
-    * @return a dynamic parameters builder for embedding into [[CypherStringContext]] interpolated [[Statement]]s
+    * @return a dynamic parameters builder for embedding into [[CypherStringContext]] interpolated [[CypherStatement]]s
     */
   def params(namespace: String): Params = new Params(namespace)
 
