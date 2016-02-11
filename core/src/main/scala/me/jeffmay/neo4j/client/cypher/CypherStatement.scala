@@ -16,7 +16,7 @@ package me.jeffmay.neo4j.client.cypher
   */
 case class CypherStatement(
   template: String,
-  parameters: Map[String, CypherProps] = Map.empty,
+  parameters: CypherParams = Map.empty,
   includeStats: Boolean = false
 ) {
 

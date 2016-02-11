@@ -64,7 +64,7 @@ class CypherStatementSpec extends WordSpec {
       }
 
       "merge all properties given" in {
-        forAll(genCypherParams) { (params: Map[String, CypherProps]) =>
+        forAll(genCypherParams) { (params: CypherParams) =>
           val expectedParams = params.filter(_._2.nonEmpty)
           val result = params.foldLeft(cypher"") {
             case (acc, (ns, propValues)) =>

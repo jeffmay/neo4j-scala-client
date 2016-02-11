@@ -26,7 +26,7 @@ trait CypherStatementGenerators extends CypherValueGenerators {
   /**
     * Generates the parameters of a [[CypherStatement]].
     */
-  lazy val genCypherParams: Gen[Map[String, CypherProps]] = {
+  lazy val genCypherParams: Gen[CypherParams] = {
     Gen.mapOf(Gen.zip(
       Gen.identifier,
       Gen.mapOf(Gen.zip(
@@ -53,7 +53,7 @@ trait CypherStatementGenerators extends CypherValueGenerators {
     * @note the explicit cases of handling empty parameter object names is tested within this library,
     *       so you shouldn't need to generate invalid inputs.
     */
-  implicit val shrinkCypherParams: Shrink[Map[String, CypherProps]] = Shrink { params =>
+  implicit val shrinkCypherParams: Shrink[CypherParams] = Shrink { params =>
     implicit val shrinkIdentifier = Shrink[String](id => Shrink.shrink[String](id).filterNot(_.isEmpty))
     Shrink.shrinkContainer2[Map, String, CypherProps].shrink(params)
   }
