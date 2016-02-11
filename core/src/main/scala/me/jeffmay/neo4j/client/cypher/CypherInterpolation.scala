@@ -17,6 +17,7 @@ class CypherStringContext(val sc: StringContext) extends AnyVal {
     *         of the [[CypherStatement]].
     * @throws InvalidCypherException if any of the args are [[CypherResultInvalid]]
     * @throws DuplicatePropertyNameException if two [[CypherParam]]s share the same namespace and property name
+    *                                        and the given values are different.
     */
   def cypher(args: CypherResult[CypherArg]*): CypherStatement = {
     // Build the literal query string
@@ -45,8 +46,10 @@ class CypherStringContext(val sc: StringContext) extends AnyVal {
       .groupBy(_.namespace)
       .map { case (namespace, fields) =>
         val props: CypherProps = fields.groupBy(_.id).map { case (name, values) =>
-          if (values.tail.nonEmpty) {
-            throw new DuplicatePropertyNameException(namespace, name, template)
+          // Allow duplicate values if they are equal
+          val conflictingValues = values.map(_.value)
+          if (conflictingValues.toSet.size > 1) {
+            throw new DuplicatePropertyNameException(namespace, name, conflictingValues, template)
           }
           name -> values.head.value
         }

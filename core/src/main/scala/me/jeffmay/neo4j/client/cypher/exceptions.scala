@@ -27,9 +27,26 @@ class InvalidCypherException(val message: String, val causes: Seq[CypherResultIn
 }
 
 /**
-  * An exception thrown
-  * @param namespace
-  * @param property
+  * An exception thrown when a property is defined twice on the same namespace in the same template.
+  *
+  * @param namespace the namespace within which the [[CypherProps]] live
+  * @param property the name of the property within the [[CypherProps]]
+  * @param template the raw cypher template for debugging purposes
   */
-class DuplicatePropertyNameException(val namespace: String, val property: String, val template: String)
-  extends CypherException(s"'$property' has already been defined for the props object named '$namespace' in:\n$template")
+class DuplicatePropertyNameException(
+  val namespace: String,
+  val property: String,
+  val conflictingValues: Seq[CypherValue],
+  val template: String
+) extends CypherException(
+    s"'$property' has already been defined for the props object named '$namespace' in:\n" +
+    s"$template\n" +
+    s"Conflicting values are: ${conflictingValues.mkString(", ")}"
+  ) {
+  private[this] val conflictingValueSet = conflictingValues.toSet
+  assert(
+    conflictingValueSet.size >= 2,
+    "This exception should not be thrown when there is less than 2 distinct conflicting values.\n" +
+    s"Given: $conflictingValueSet"
+  )
+}
