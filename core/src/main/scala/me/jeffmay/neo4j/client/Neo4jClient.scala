@@ -11,14 +11,14 @@ trait Neo4jClient {
 
   def changePassword(newPassword: String): Future[Unit]
 
-  // TODO: Use a single statement return type
-  def openAndCommitTxn(first: CypherStatement, others: CypherStatement*): Future[CommittedTxnResponse]
+  def openAndCommitTxn(statement: CypherStatement): Future[SingleCommittedTxnResponse]
+  def openAndCommitTxn(statements: Seq[CypherStatement]): Future[CommittedTxnResponse]
 
-  // TODO: Use a single statement return type
-  def openTxn(statements: CypherStatement*): Future[OpenedTxnResponse]
+  def openTxn(): Future[OpenedTxnResponse]
+  def openTxn(statement: CypherStatement): Future[SingleOpenedTxnResponse]
+  def openTxn(statements: Seq[CypherStatement]): Future[OpenedTxnResponse]
 
-  // TODO: Use a single statement return type
-  def commitTxn(ref: TxnRef, alongWith: CypherStatement*): Future[CommittedTxnResponse]
+  def commitTxn(ref: TxnRef, alongWith: Seq[CypherStatement] = Seq.empty): Future[CommittedTxnResponse]
 
   def withStatsIncludedByDefault(includeStatsByDefault: Boolean): Neo4jClient
 

@@ -19,4 +19,6 @@ package object rest {
     case CypherChar(v) => Json.toJson(v.toString)
     case CypherShort(v) => Json.toJson(v)
   }
+
+  implicit lazy val writesCypherStatement: Writes[CypherStatement] = Json.writes[CypherStatement]
 }

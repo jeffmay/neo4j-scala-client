@@ -74,34 +74,20 @@ class WSNeo4jClient(
       .map(_ => ())
   }
 
-  override def openTxn(statements: CypherStatement*): Future[OpenedTxnResponse] = {
-    val rawBody = RawStatementTransactionRequest.fromCypherStatements(statements)
-    val jsonBody = Json.toJson(rawBody)
-    val request = http("/db/data/transaction")
-    request.postAndCheckStatus(Some(jsonBody)).flatMap { resp =>
-      // TODO: Handle version / json format errors with common recovery code
-      val respBody = resp.json.as[RawTxnResponse]
-      if (respBody.isSuccessful) {
-        Future.successful(respBody.asOpenTxnResponse.get)
-      }
-      else {
-        Future.failed(statusCodeException(request, Some(jsonBody), resp, respBody.neo4jErrors))
-      }
-    }
-  }
-
-  override def openAndCommitTxn(first: CypherStatement, others: CypherStatement*): Future[CommittedTxnResponse] = {
-    val rawBody = RawStatementTransactionRequest.fromCypherStatements(first +: others)
-    val jsonBody = Json.toJson(rawBody)
-    val request = http("/db/data/transaction/commit")
-    rawBody.statements.foreach { stmt =>
+  private def requestTxn[T](url: String, statements: Seq[CypherStatement])(convert: RawTxnResponse => Try[T]): Future[T] = {
+    // TODO: Allow this to be configurable
+    statements.foreach { stmt =>
       println(s"Executing Cypher statement: ${Json.prettyPrint(Json.toJson(stmt))}")
     }
+    val rawBody = RawStatementTransactionRequest.fromCypherStatements(statements)
+    val jsonBody = Json.toJson(rawBody)
+    val request = http(url)
     request.postAndCheckStatus(Some(jsonBody)).flatMap { resp =>
       // TODO: Handle version / json format errors with common recovery code
       val respBody = resp.json.as[RawTxnResponse]
       if (respBody.isSuccessful) {
-        Future.successful(respBody.asCommitTxnResponse.get)
+        // Do the conversion in the same thread. Any thrown exceptions will fold into the failed case
+        Future.successful(convert(respBody).get)
       }
       else {
         Future.failed(statusCodeException(request, Some(jsonBody), resp, respBody.neo4jErrors))
@@ -109,19 +95,35 @@ class WSNeo4jClient(
     }
   }
 
-  override def commitTxn(ref: TxnRef, alongWith: CypherStatement*): Future[CommittedTxnResponse] = {
-    val rawBody = RawStatementTransactionRequest.fromCypherStatements(alongWith)
-    val jsonBody = Json.toJson(rawBody)
-    val request = http("/db/data/transaction")
-    request.postAndCheckStatus(Some(jsonBody)).flatMap { resp =>
-      // TODO: Handle version / json format errors with common recovery code
-      val respBody = resp.json.as[RawTxnResponse]
-      if (respBody.isSuccessful) {
-        Future.successful(respBody.asCommitTxnResponse.get)
-      }
-      else {
-        Future.failed(statusCodeException(request, Some(jsonBody), resp, respBody.neo4jErrors))
-      }
+  override def openTxn(): Future[OpenedTxnResponse] = openTxn(Seq())
+
+  override def openTxn(statement: CypherStatement): Future[SingleOpenedTxnResponse] = {
+    requestTxn("/db/data/transaction", Seq(statement)) {
+      _.asOpenedTxnResponse(statement)
+    }
+  }
+
+  override def openTxn(statements: Seq[CypherStatement]): Future[OpenedTxnResponse] = {
+    requestTxn("/db/data/transaction", statements) {
+      _.asOpenedTxnResponse(statements)
+    }
+  }
+
+  override def openAndCommitTxn(statement: CypherStatement): Future[SingleCommittedTxnResponse] = {
+    requestTxn("/db/data/transaction/commit", Seq(statement)) {
+      _.asCommittedTxnResponse(statement)
+    }
+  }
+
+  override def openAndCommitTxn(statements: Seq[CypherStatement]): Future[CommittedTxnResponse] = {
+    requestTxn("/db/data/transaction/commit", statements) {
+      _.asCommittedTxnResponse(statements)
+    }
+  }
+
+  override def commitTxn(ref: TxnRef, alongWith: Seq[CypherStatement]): Future[CommittedTxnResponse] = {
+    requestTxn(ref.url, alongWith) {
+      _.asCommittedTxnResponse(alongWith)
     }
   }
 }

@@ -101,7 +101,7 @@ class WSNeo4jClientBasicSpecs extends fixture.AsyncWordSpec
           AddLabel.successResultStats
         )
         for {
-          rsp <- client.openAndCommitTxn(queries.head, queries.tail: _*)
+          rsp <- client.openAndCommitTxn(queries)
         } yield {
           assert(rsp.results.size === expectedResultStats.size)
           val tests = (expectedResultStats zip rsp.results).zipWithIndex

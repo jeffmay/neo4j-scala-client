@@ -37,30 +37,25 @@ private[client] case class RawTxnResponse(
     ))
   }
 
-  def asTxnResponse: Try[TxnResponse] = {
-    asOpenTxnResponse.recoverWith {
-      case openTxnEx: ConversionError =>
-        asCommitTxnResponse.recoverWith {
-          case commitedTxnEx: ConversionError =>
-            failToConvert(
-              "either OpenTxnResponse or CommitTxnResponse",
-              s"${openTxnEx.reason} and ${commitedTxnEx.reason}"
-            )
-        }
-    }
-  }
-
-  def asCommitTxnResponse: Try[CommittedTxnResponse] = {
+  private def asCommittedTxn[T](f: (Seq[StatementResult], Seq[Neo4jError]) => T): Try[T] = {
     if (transactionComplete)
-      Success(CommittedTxnResponse(results.map(_.asStatementResult), errors.map(_.asNeo4jError)))
+      Success(f(results.map(_.asStatementResult), errors.map(_.asNeo4jError)))
     else
       failToConvert(
-        "CommitTxnResponse",
+        "CommittedTxnResponse",
         "Transaction URL was empty and / or result contained errors that would trigger rollback"
       )
   }
 
-  def asOpenTxnResponse: Try[OpenedTxnResponse] = {
+  def asCommittedTxnResponse(statement: CypherStatement): Try[SingleCommittedTxnResponse] = {
+    asCommittedTxn(SingleCommittedTxnResponse(statement, _, _))
+  }
+
+  def asCommittedTxnResponse(statements: Seq[CypherStatement]): Try[CommittedTxnResponse] = {
+    asCommittedTxn(GenericCommittedTxnResponse(statements, _, _))
+  }
+
+  private def asOpenedTxn[T](f: (Seq[StatementResult], TxnInfo, Seq[Neo4jError]) => T): Try[T] = {
     for {
       commitUrl <- commit.map(Success(_)).getOrElse(failToConvert("OpenTxnResponse", "Missing commitUrl"))
       txn <- transaction.map(Success(_)).getOrElse(failToConvert("OpenTxnResponse", "Missing transaction"))
@@ -68,12 +63,16 @@ private[client] case class RawTxnResponse(
         case ex => failToConvert("OpenTxnResponse", "Failed to parse TxnRef", ex)
       }
     } yield {
-      OpenedTxnResponse(
-        results.map(_.asStatementResult),
-        TxnInfo(txnRef, txn.expires),
-        errors.map(_.asNeo4jError)
-      )
+      f(results.map(_.asStatementResult), TxnInfo(txnRef, txn.expires), errors.map(_.asNeo4jError))
     }
+  }
+
+  def asOpenedTxnResponse(statement: CypherStatement): Try[SingleOpenedTxnResponse] = {
+    asOpenedTxn(SingleOpenedTxnResponse(statement, _, _, _))
+  }
+
+  def asOpenedTxnResponse(statements: Seq[CypherStatement]): Try[OpenedTxnResponse] = {
+    asOpenedTxn(GenericOpenedTxnResponse(statements, _, _, _))
   }
 }
 
