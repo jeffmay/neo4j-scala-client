@@ -1,5 +1,8 @@
 package me.jeffmay.neo4j.client.cypher
 
+import me.jeffmay.neo4j.client.Show
+import me.jeffmay.neo4j.client.cypher.Cypher.ImmutableParam
+
 import scala.language.implicitConversions
 import scala.util.Try
 
@@ -19,7 +22,18 @@ sealed trait CypherResult[+T <: CypherArg] {
   @inline final def tryGet: Try[T] = Try(getOrThrow)
 }
 object CypherResult {
+
+  /**
+    * All [[CypherArg]]s are valid [[CypherArg]]s.
+    */
   implicit def valid[T <: CypherArg](arg: T): CypherResultValid[T] = CypherResultValid(arg)
+
+  /**
+    * All [[ImmutableParam]]s are valid [[CypherArg]]s.
+    */
+  implicit def immutableParams(arg: ImmutableParam): CypherResultValid[CypherParamObject] = {
+    CypherResultValid(new CypherParamObject(arg.namespace, arg.props))
+  }
 }
 
 /**
@@ -40,7 +54,7 @@ case class CypherResultValid[+T <: CypherArg](result: T) extends CypherResult[T]
   */
 case class CypherResultInvalid(result: InvalidCypherArg) extends CypherResult[Nothing] {
   // Construct the exception on instantiation to insure that the stack-trace captures where the failure occurs.
-  val exception: Throwable = new InvalidCypherException(result.message)
+  val exception: Throwable = new InvalidCypherException(result.message, result.template)
   final override def isValid: Boolean = false
   final override def getOrThrow: Nothing = throw exception
 }
@@ -50,6 +64,22 @@ case class CypherResultInvalid(result: InvalidCypherArg) extends CypherResult[No
   */
 sealed trait InvalidCypherArg {
   def message: String
+  def template: Option[String]
+}
+
+/**
+  * The cypher argument requested is not available on the given props.
+  */
+case class MissingCypherProperty(props: CypherProps, name: String)(implicit showProps: Show[CypherProps])
+  extends InvalidCypherArg {
+
+  require(!(props contains name), s"${showProps show props} does contain the key '$name'")
+
+  final override def template: Option[String] = None
+
+  override lazy val message: String = {
+    s"The property name '$name' cannot be found in the props: ${showProps show props}"
+  }
 }
 
 /**
@@ -57,6 +87,7 @@ sealed trait InvalidCypherArg {
   */
 sealed trait InvalidCypherArgFormat extends InvalidCypherArg {
   def literal: String
+  override def template: Option[String] = Some(literal)
 }
 
 /**
@@ -65,7 +96,7 @@ sealed trait InvalidCypherArgFormat extends InvalidCypherArg {
   * @param literal the invalid identifier name used
   */
 case class CypherIdentifierInvalidFormat(literal: String) extends InvalidCypherArgFormat {
-  override def message: String = s"Invalid identifier format '$literal'. Must match /${CypherIdentifier.Valid.pattern.pattern}/"
+  override lazy val message: String = s"Invalid identifier format '$literal'. Must match /${CypherIdentifier.Valid.pattern.pattern}/"
 }
 
 /**
@@ -74,7 +105,7 @@ case class CypherIdentifierInvalidFormat(literal: String) extends InvalidCypherA
   * @param literal the invalid label name used
   */
 case class CypherLabelInvalidFormat(literal: String) extends InvalidCypherArgFormat {
-  override def message: String = s"Invalid label format '$literal'. Must match /${CypherLabel.Valid.pattern.pattern}/"
+  override lazy val message: String = s"Invalid label format '$literal'. Must match /${CypherLabel.Valid.pattern.pattern}/"
 }
 
 /**
@@ -157,13 +188,24 @@ object CypherLabel {
 }
 
 /**
-  * Holds a single parameter in the [[CypherStatement.parameters]].
+  * Holds a single parameter field within one of the [[CypherStatement.parameters]] namespaces.
   *
   * @note This is not constructed directly. Rather, you use the [[Cypher.params]] methods to build this.
   * @param namespace the key of the [[CypherProps]] within which field names are unique
   * @param id the field name within the namespace
   * @param value the value of the parameter object's field
   */
-case class CypherParam private[cypher] (namespace: String, id: String, value: CypherValue) extends CypherArg {
+case class CypherParamField private[cypher] (namespace: String, id: String, value: CypherValue) extends CypherArg {
   override val template: String = s"{$namespace}.$id"
+}
+
+/**
+  * Holds a single parameter object as one of the [[CypherStatement.parameters]] namespaces.
+  *
+  * @note This is not constructed directly. Rather, you use the [[Cypher.params]] methods to build this.
+  * @param namespace the key of the [[CypherProps]] within which field names are unique
+  * @param props the map of fields to unfold as properties in place
+  */
+case class CypherParamObject private[cypher] (namespace: String, props: CypherProps) extends CypherArg {
+  override val template: String = s"{ $namespace }"
 }
