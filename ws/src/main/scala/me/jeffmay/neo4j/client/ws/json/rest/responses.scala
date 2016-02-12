@@ -1,7 +1,7 @@
-package me.jeffmay.neo4j.client.rest
+package me.jeffmay.neo4j.client.ws.json.rest
 
-import me.jeffmay.neo4j.client._
 import me.jeffmay.neo4j.client.cypher.CypherStatement
+import me.jeffmay.neo4j.client._
 import org.joda.time.DateTime
 import play.api.libs.json._
 
@@ -30,6 +30,7 @@ private[client] case class RawTxnResponse(
   def neo4jErrors: Seq[Neo4jError] = errors.map(_.asNeo4jError)
 
   private def failToConvert(expected: String, reason: String, cause: Throwable = null): Try[Nothing] = {
+    import ws.json.debug._
     Failure(new IllegalArgumentException(
       s"Connect convert to $expected from: ${Json.prettyPrint(Json.toJson(this))}\n" +
         s"Reason: $reason",
@@ -76,15 +77,8 @@ private[client] case class RawTxnResponse(
   }
 }
 
-private[client] object RawTxnResponse {
-  implicit val jsonReader: Reads[RawTxnResponse] = Json.reads[RawTxnResponse]
-  // Needed for debugging
-  implicit val jsonWriter: Writes[RawTxnResponse] = Json.writes[RawTxnResponse]
-}
-
 /**
   * The error code and message sent by the REST API.
-  *
   * @param code the status code parsed from the response
   * @param message the debug message to help find the problem with the request
   */
@@ -93,9 +87,6 @@ private[client] case class RawError(code: Neo4jStatusCode, message: String) {
 }
 
 private[client] object RawError {
-  implicit val jsonReader: Reads[RawError] = Json.reads[RawError]
-  // Needed for debugging
-  implicit val jsonWriter: Writes[RawError] = Json.writes[RawError]
   // Implicitly available as
   implicit def asStatementResultStats(raw: RawError): Neo4jError = raw.asNeo4jError
 }
@@ -104,12 +95,6 @@ private[client] object RawError {
   * The transaction info about the open transaction.
   */
 private[client] case class RawTxnInfo(expires: DateTime)
-
-private[client] object RawTxnInfo {
-  implicit val jsonReader: Reads[RawTxnInfo] = Json.reads[RawTxnInfo]
-  // Needed for debugging
-  implicit val jsonWriter: Writes[RawTxnInfo] = Json.writes[RawTxnInfo]
-}
 
 /**
   * Stats about the result of running a single [[CypherStatement]].
@@ -147,9 +132,6 @@ private[client] case class RawResultStats(
 }
 
 private[client] object RawResultStats {
-  implicit val jsonReader: Reads[RawResultStats] = Json.reads[RawResultStats]
-  // Needed for debugging
-  implicit val jsonWrites: Writes[RawResultStats] = Json.writes[RawResultStats]
   // Implicitly available as
   implicit def asStatementResultStats(raw: RawResultStats): StatementResultStats = raw.asStatementResultStats
 }
@@ -168,9 +150,7 @@ private[client] case class RawStatementResult(
   }
 }
 private[client] object RawStatementResult {
-  implicit val jsonReader: Reads[RawStatementResult] = Json.reads[RawStatementResult]
-  // Needed for debugging
-  implicit val jsonWriter: Writes[RawStatementResult] = Json.writes[RawStatementResult]
+
   // Implicitly available as
   implicit def asStatementResult(raw: RawStatementResult): StatementResult = raw.asStatementResult
 }
@@ -179,9 +159,3 @@ private[client] object RawStatementResult {
   * A single row of a [[RawStatementResult]]
   */
 private[client] case class RawStatementRow(row: Seq[JsValue])
-
-private[client] object RawStatementRow {
-  implicit val jsonReader: Reads[RawStatementRow] = Json.reads[RawStatementRow]
-  // Needed for debugging
-  implicit val jsonWriter: Writes[RawStatementRow] = Json.writes[RawStatementRow]
-}

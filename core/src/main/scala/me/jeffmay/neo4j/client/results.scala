@@ -35,10 +35,6 @@ case class StatementResult(
   def rows: Iterable[StatementResultRow] = rowsIterator.toIterable
 }
 
-object StatementResult {
-  implicit val jsonWriter: Writes[StatementResult] = Json.writes[StatementResult]
-}
-
 /**
   * A thin wrapper around a row of data that allows access via a column name instead of an index.
   *
@@ -63,10 +59,6 @@ case class StatementResultRow(data: IndexedSeq[JsValue], columns: Map[String, In
     * Returns a map representation of the data, where the key is the column and the value comes from the data.
     */
   def toMap: Map[String, JsValue] = columns mapValues data
-}
-
-object StatementResultRow {
-  implicit val jsonWriter: Writes[StatementResultRow] = Json.writes[StatementResultRow]
 }
 
 /**
@@ -101,7 +93,6 @@ case class StatementResultStats(
 )
 
 object StatementResultStats {
-  implicit val jsonWriter: Writes[StatementResultStats] = Json.writes[StatementResultStats]
 
   val empty: StatementResultStats = {
     StatementResultStats(

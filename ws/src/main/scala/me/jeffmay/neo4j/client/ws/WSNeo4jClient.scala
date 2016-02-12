@@ -5,7 +5,8 @@ import me.jeffmay.neo4j.client
 import me.jeffmay.neo4j.client._
 import me.jeffmay.neo4j.client.cypher.CypherStatement
 import me.jeffmay.neo4j.client.StatusCodeException
-import me.jeffmay.neo4j.client.rest._
+import me.jeffmay.neo4j.client.ws.json.debug._
+import me.jeffmay.neo4j.client.ws.json.rest._
 import me.jeffmay.util.ws.{ProxyWSClient, TimeoutWSRequest}
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.{WSAuthScheme, WSClient, WSRequest, WSResponse}

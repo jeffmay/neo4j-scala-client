@@ -13,6 +13,8 @@ class WSNeo4jClientBasicSpecs extends fixture.AsyncWordSpec
   with AssertResultStats
   with UniquePerClassNamespace {
 
+  import ws.json.debug._
+
   override implicit def executionContext: ExecutionContext = ExecutionContext.global
 
   class FixtureParam extends UniqueNamespace with FixtureQueries {
