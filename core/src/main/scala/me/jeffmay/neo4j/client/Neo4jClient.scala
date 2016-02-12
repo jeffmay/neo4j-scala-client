@@ -1,6 +1,6 @@
 package me.jeffmay.neo4j.client
 
-import me.jeffmay.neo4j.client.cypher.Statement
+import me.jeffmay.neo4j.client.cypher.CypherStatement
 
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
@@ -12,13 +12,13 @@ trait Neo4jClient {
   def changePassword(newPassword: String): Future[Unit]
 
   // TODO: Use a single statement return type
-  def openAndCommitTxn(first: Statement, others: Statement*): Future[CommittedTxnResponse]
+  def openAndCommitTxn(first: CypherStatement, others: CypherStatement*): Future[CommittedTxnResponse]
 
   // TODO: Use a single statement return type
-  def openTxn(statements: Statement*): Future[OpenedTxnResponse]
+  def openTxn(statements: CypherStatement*): Future[OpenedTxnResponse]
 
   // TODO: Use a single statement return type
-  def commitTxn(ref: TxnRef, alongWith: Statement*): Future[CommittedTxnResponse]
+  def commitTxn(ref: TxnRef, alongWith: CypherStatement*): Future[CommittedTxnResponse]
 
   def withStatsIncludedByDefault(includeStatsByDefault: Boolean): Neo4jClient
 

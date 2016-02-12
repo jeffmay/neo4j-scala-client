@@ -37,6 +37,17 @@ class CypherStringContextSpec extends WordSpec
       }
     }
 
+    "allow literal substitution for identifiers" in {
+      val stmt = cypher"MATCH (${Cypher.ident("n")}) RETURN n"
+      val expectedTemplate = "MATCH (n) RETURN n"
+      assertResult(expectedTemplate, "template did not render properly") {
+        stmt.template
+      }
+      assertResult(Map.empty) {
+        stmt.parameters
+      }
+    }
+
     "allow literal substitution for labels" in {
       val stmt = cypher"MATCH (n ${Cypher.label("EXPECTED")}) RETURN n"
       val expectedTemplate = "MATCH (n :EXPECTED) RETURN n"

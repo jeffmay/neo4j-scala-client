@@ -1,6 +1,6 @@
 package me.jeffmay.neo4j.client.rest
 
-import me.jeffmay.neo4j.client.cypher.{CypherProps, Statement}
+import me.jeffmay.neo4j.client.cypher.{CypherProps, CypherStatement}
 import play.api.libs.json.{JsObject, Json, OWrites, Writes}
 
 import scala.language.implicitConversions
@@ -17,13 +17,13 @@ private[client] case class RawStatementTransactionRequest(
 private[client] object RawStatementTransactionRequest {
   implicit val writer: Writes[RawStatementTransactionRequest] = Json.writes[RawStatementTransactionRequest]
 
-  def fromCypherStatements(statements: Seq[Statement]): RawStatementTransactionRequest = {
+  def fromCypherStatements(statements: Seq[CypherStatement]): RawStatementTransactionRequest = {
     new RawStatementTransactionRequest(statements.map(RawRequestStatement.fromCypherStatement))
   }
 }
 
 /**
-  * The json representation of a [[Statement]] for Neo4j's REST API.
+  * The json representation of a [[CypherStatement]] for Neo4j's REST API.
   *
   * @param statement the query string
   * @param parameters the parameters to substitute into the query string
@@ -38,7 +38,7 @@ private[client] case class RawRequestStatement(
 private[client] object RawRequestStatement {
   implicit val jsonWriter: Writes[RawRequestStatement] = Json.writes[RawRequestStatement]
 
-  def fromCypherStatement(statement: Statement): RawRequestStatement = {
+  def fromCypherStatement(statement: CypherStatement): RawRequestStatement = {
     new RawRequestStatement(
       statement.template,
       OWrites.map[CypherProps].writes(statement.parameters),

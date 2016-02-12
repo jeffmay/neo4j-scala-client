@@ -7,5 +7,12 @@ package me.jeffmay.neo4j.client
 package object cypher extends CypherInterpolation {
 
   type CypherProps = Map[String, CypherValue]
+
+  type CypherParams = Map[String, CypherProps]
+
+  @deprecated("Use CypherStatement instead", "0.4.0")
+  type Statement = CypherStatement
+  @deprecated("Use CypherStatement instead", "0.4.0")
+  val Statement = CypherStatement
 }
 

@@ -1,10 +1,10 @@
 package me.jeffmay.neo4j.client
 
 import play.api.libs.json._
-import me.jeffmay.neo4j.client.cypher.Statement
+import me.jeffmay.neo4j.client.cypher.CypherStatement
 
 /**
-  * A result from a single [[Statement]].
+  * A result from a single [[CypherStatement]].
   *
   * @param columns a map of column names to index
   * @param data    the table of rows / columns of json values to be parsed
@@ -70,7 +70,7 @@ object StatementResultRow {
 }
 
 /**
-  * Stats about the effects of executing the [[Statement]].
+  * Stats about the effects of executing the [[CypherStatement]].
   *
   * @param containsUpdates whether the statement contained updates
   * @param nodesCreated the number of nodes created

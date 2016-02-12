@@ -5,13 +5,18 @@ import scala.language.{dynamics, implicitConversions}
 object Cypher {
 
   /**
-    * The canonical method to create a [[CypherLabel]] to insert into a CypherString.
-    *
-    * @see <a href="http://neo4j.com/docs/stable/graphdb-neo4j.html#graphdb-neo4j-labels">Label Documentation</a>
+    * The canonical method to create a [[CypherLabel]] to insert into the cypher query string.
     *
     * @return A [[CypherResult]] which can either contain the label or an error.
     */
-  def label(labelName: String): CypherResult[CypherLabel] = CypherLabel(labelName)
+  def label(name: String): CypherResult[CypherLabel] = CypherLabel(name)
+
+  /**
+    * The canonical method to create a [[CypherIdentifier]] to insert into a cypher query string.
+    *
+    * @return a [[CypherResult]] which can either contain the identifier or an error
+    */
+  def ident(name: String): CypherResult[CypherIdentifier] = CypherIdentifier(name)
 
   /**
     * The canonical method to create a [[CypherProps]] map.
@@ -39,7 +44,7 @@ object Cypher {
     * }}}
     *
     * @param namespace the name of the parameters object as sent to the server
-    * @return a dynamic parameters builder for embedding into [[CypherStringContext]] interpolated [[Statement]]s
+    * @return a dynamic parameters builder for embedding into [[CypherStringContext]] interpolated [[CypherStatement]]s
     */
   def params(namespace: String): Params = new Params(namespace)
 
