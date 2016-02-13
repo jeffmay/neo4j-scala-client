@@ -50,9 +50,8 @@ case class CypherStatement(
     *
     * @note WARNING: Any settings like "includeStats" drop back to the default.
     *       You have to explicitly add the settings you want after concatenating the statements.
-    *
-    * @throws DuplicatePropertyNameException if the statements contain conflicting property values for a single
-    *                                        property name within a namespace.
+    * @throws ConflictingParameterFieldsException if the statements contain conflicting property values for a single
+    *                                             property name within a namespace.
     */
   def concat(that: CypherStatement): CypherStatement = {
     val mergedTemplate = this.template + that.template
@@ -65,7 +64,7 @@ case class CypherStatement(
       for (key <- conflictingParamKeys) {
         val duplicates = Set(thisParams(key), thatParams(key))
         if (duplicates.size > 1) {
-          throw new DuplicatePropertyNameException(ns, key, duplicates.toSeq, mergedTemplate)
+          throw new ConflictingParameterFieldsException(ns, key, duplicates.toSeq, mergedTemplate)
         }
       }
       mergedOverrides :+= ns -> (thisParams ++ thatParams)

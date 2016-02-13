@@ -23,7 +23,7 @@ class CypherStatementSpec extends WordSpec {
 
       "throw an exception when statement parameters share the same namespace and key but with different values" in {
         val props = Cypher.params("props")
-        val ex = intercept[DuplicatePropertyNameException] {
+        val ex = intercept[ConflictingParameterFieldsException] {
           cypher"MATCH (n { ref: ${props.ref(1)} }) --> (m { ref: ${props.ref(2)} })"
         }
         assertResult(Seq(CypherInt(1), CypherInt(2)))(ex.conflictingValues)
@@ -57,7 +57,7 @@ class CypherStatementSpec extends WordSpec {
 
       "throw an exception when statement parameters share the same namespace and key but with different values" in {
         val props = Cypher.params("props")
-        val ex = intercept[DuplicatePropertyNameException] {
+        val ex = intercept[ConflictingParameterFieldsException] {
           cypher"MATCH (n { ref: ${props.ref(1)} })" :+: cypher" --> (m { ref: ${props.ref(2)} })"
         }
         assertResult(Seq(CypherInt(1), CypherInt(2)))(ex.conflictingValues)
