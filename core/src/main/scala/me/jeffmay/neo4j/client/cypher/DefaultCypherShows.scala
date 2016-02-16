@@ -22,14 +22,14 @@ trait DefaultCypherShows {
   }
 
   implicit lazy val showCypherString: Show[CypherString] = Show.show(str => "\"" + str.value + "\"")
-  implicit lazy val showCypherInt: Show[CypherInt] = Show.fromToString
-  implicit lazy val showCypherBoolean: Show[CypherBoolean] = Show.fromToString
-  implicit lazy val showCypherDouble: Show[CypherDouble] = Show.show(d => s"${d}D")
-  implicit lazy val showCypherLong: Show[CypherLong] = Show.show(l => s"${l}L")
-  implicit lazy val showCypherFloat: Show[CypherFloat] = Show.show(f => s"${f}F")
-  implicit lazy val showCypherShort: Show[CypherShort] = Show.show(s => s"(short)$s")
-  implicit lazy val showCypherByte: Show[CypherByte] = Show.show(b => s"(byte)$b")
-  implicit lazy val showCypherChar: Show[CypherChar] = Show.show(c => s"'$c'")
+  implicit lazy val showCypherInt: Show[CypherInt] = Show.show(i => i.value.toString)
+  implicit lazy val showCypherBoolean: Show[CypherBoolean] = Show.show(b => b.value.toString)
+  implicit lazy val showCypherDouble: Show[CypherDouble] = Show.show(d => s"${d.value}D")
+  implicit lazy val showCypherLong: Show[CypherLong] = Show.show(l => s"${l.value}L")
+  implicit lazy val showCypherFloat: Show[CypherFloat] = Show.show(f => s"${f.value}f")
+  implicit lazy val showCypherShort: Show[CypherShort] = Show.show(s => s"${s.value}s")
+  implicit lazy val showCypherByte: Show[CypherByte] = Show.show(b => f"0x${b.value}%02x")
+  implicit lazy val showCypherChar: Show[CypherChar] = Show.show(c => s"'${c.value}'")
 
   implicit lazy val showCypherPrimitive: Show[CypherPrimitive] = Show.show {
     case v: CypherString => Show[CypherString].show(v)

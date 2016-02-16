@@ -37,17 +37,4 @@ object Show {
     */
   def apply[T](implicit show: Show[T]): Show[T] = show
 
-  /**
-    * By default all primitives are shown as expected.
-    */
-  implicit def showAsString[T <: AnyVal]: Show[T] = new Show[T @specialized(Specializable.Primitives)] {
-    override def show(value: T): String = "" + value
-  }
-
-  /**
-    * A string by any other name would look just the same.
-    */
-  implicit val showString: Show[String] = new Show[String] {
-    override def show(value: String): String = value
-  }
 }
