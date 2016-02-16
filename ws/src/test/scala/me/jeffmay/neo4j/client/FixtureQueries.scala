@@ -11,14 +11,13 @@ trait FixtureQueries {
    */
 
   object CreateNode {
-    def query(id: String, includeStats: Boolean = true)(implicit ns: Namespace): CypherStatement = {
+    def query(id: String)(implicit ns: Namespace): CypherStatement = {
       CypherStatement(
         "CREATE (n { ns: {props}.ns, id: {props}.id })",
         Map("props" -> Cypher.props(
           "id" -> id,
           "ns" -> ns.value
-        )),
-        includeStats = includeStats
+        ))
       )
     }
     val successResultStats: StatementResultStats = {
@@ -26,8 +25,21 @@ trait FixtureQueries {
     }
   }
 
+  object FindNode {
+    def query(id: String)(implicit ns: Namespace): CypherStatement = {
+      CypherStatement(
+        "MATCH (n { ns: {props}.ns, id: {props}.id }) RETURN n",
+        Map("props" -> Cypher.props(
+          "id" -> id,
+          "ns" -> ns.value
+        ))
+      )
+    }
+    val successResultStats: StatementResultStats = StatementResultStats.empty
+  }
+
   object RenameNode {
-    def query(id: String, newId: String, includeStats: Boolean = true)(implicit ns: Namespace): CypherStatement = {
+    def query(id: String, newId: String)(implicit ns: Namespace): CypherStatement = {
       CypherStatement(
         "MATCH (n { ns: {props}.ns, id: {props}.id }) SET n.id = {new}.id",
         Map(
@@ -38,8 +50,7 @@ trait FixtureQueries {
           "new" -> Cypher.props(
             "id" -> newId
           )
-        ),
-        includeStats = includeStats
+        )
       )
     }
     val successResultStats: StatementResultStats = {
@@ -48,7 +59,7 @@ trait FixtureQueries {
   }
 
   object AddLabel {
-    def query(id: String, label: String, includeStats: Boolean = true)(implicit ns: Namespace): CypherStatement = {
+    def query(id: String, label: String)(implicit ns: Namespace): CypherStatement = {
       CypherStatement(
         s"MATCH (n { ns: {props}.ns, id: {props}.id }) SET n ${Cypher.label(label).getOrThrow.template}",
         Map(
@@ -56,8 +67,7 @@ trait FixtureQueries {
             "id" -> id,
             "ns" -> ns.value
           )
-        ),
-        includeStats = includeStats
+        )
       )
     }
     val successResultStats: StatementResultStats = {

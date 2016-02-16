@@ -1,7 +1,7 @@
 package me.jeffmay.neo4j.client.ws.json.rest
 
 import me.jeffmay.neo4j.client.ws.json.SharedFormats
-import play.api.libs.json.{Reads, Json, Writes}
+import play.api.libs.json.{Json, Reads, Writes}
 
 private[json] trait RestFormats extends SharedFormats {
 

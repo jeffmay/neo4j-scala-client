@@ -123,7 +123,11 @@ class WSNeo4jClient(
   }
 
   override def commitTxn(ref: TxnRef, alongWith: Seq[CypherStatement]): Future[CommittedTxnResponse] = {
-    requestTxn(ref.url, alongWith) {
+    val client = {
+      if (config.baseUrl startsWith ref.host) this
+      else this.copy(config = config.copy(baseUrl = ref.host))  // TODO: log info?
+    }
+    client.requestTxn(s"/db/data/transaction/${ref.id}/commit", alongWith) {
       _.asCommittedTxnResponse(alongWith)
     }
   }

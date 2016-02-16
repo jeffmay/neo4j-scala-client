@@ -4,7 +4,12 @@ import me.jeffmay.neo4j.client._
 import me.jeffmay.neo4j.client.cypher.{Cypher, CypherStatement}
 import me.jeffmay.util.UniquePerClassNamespace
 import me.jeffmay.util.akka.TestGlobalAkka
+import me.jeffmay.util.ws.ProxyWSRequest
+import org.mockito.Matchers._
+import org.mockito.Mockito._
 import org.scalatest._
+import org.scalatest.mock.MockitoSugar.mock
+import play.api.libs.ws.{WSRequest, WSClient}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -18,10 +23,15 @@ class WSNeo4jClientBasicSpecs extends fixture.AsyncWordSpec
   override implicit def executionContext: ExecutionContext = ExecutionContext.global
 
   class FixtureParam extends UniqueNamespace with FixtureQueries {
+
+    val clientConfig = Neo4jClientConfig.fromConfig(TestGlobal.config)
+
+    def scheduler = TestGlobalAkka.scheduler
+
     val client: Neo4jClient = new WSNeo4jClient(
       TestWSClient.TestWS,
-      Neo4jClientConfig.fromConfig(TestGlobal.config),
-      TestGlobalAkka.scheduler,
+      clientConfig,
+      scheduler,
       executionContext
     )
   }
@@ -71,7 +81,7 @@ class WSNeo4jClientBasicSpecs extends fixture.AsyncWordSpec
       "add a single node to the graph" in { fixture =>
         import fixture._
         for {
-          rsp <- client.openAndCommitTxn(CreateNode.query("singleWithoutStats", includeStats = false))
+          rsp <- client.openAndCommitTxn(CreateNode.query("singleWithoutStats"))
         } yield {
           assertResult(true, "should not encounter errors") {
             rsp.errors.isEmpty
@@ -82,7 +92,7 @@ class WSNeo4jClientBasicSpecs extends fixture.AsyncWordSpec
       "return the correct stats for a single create statement" in { fixture =>
         import fixture._
         for {
-          rsp <- client.openAndCommitTxn(CreateNode.query("singleWithStats"))
+          rsp <- client.openAndCommitTxn(CreateNode.query("singleWithStats").withStats)
         } yield {
           assertResult(1, "should have the correct stats included") {
             rsp.results.head.stats.get.nodesCreated
@@ -96,7 +106,7 @@ class WSNeo4jClientBasicSpecs extends fixture.AsyncWordSpec
           CreateNode.query("a"),
           RenameNode.query("a", "b"),
           AddLabel.query("b", "B")
-        )
+        ).map(_.withStats)
         val expectedResultStats = Seq(
           CreateNode.successResultStats,
           RenameNode.successResultStats,
@@ -117,6 +127,48 @@ class WSNeo4jClientBasicSpecs extends fixture.AsyncWordSpec
           Succeeded
         }
       }
+    }
+
+    "calling openTxn followed by commitTxn" should {
+
+      "not affect queries until committed" in { fixture =>
+        import fixture._
+        val nodeId = "uncommittedNode"
+        val findQuery = FindNode.query(nodeId)
+        for {
+          openTxnRsp <- client.openTxn(CreateNode.query(nodeId).withStats)
+          otherTxnRsp <- client.openAndCommitTxn(findQuery)
+          commitTxnRsp <- client.commitTxn(openTxnRsp.transaction.txn, Seq(findQuery))
+        } yield {
+          assertResult(CreateNode.successResultStats, "open transaction updates should complete successfully") {
+            openTxnRsp.result.right.get.stats.get
+          }
+          assertResult(Seq(), "expected 0 results before committing the transaction") {
+            otherTxnRsp.result.right.get.data
+          }
+          assertResult(1, "expected 1 results after committing the create node transaction") {
+            commitTxnRsp.results.head.rows.size
+          }
+        }
+      }
+
+//      "use other baseUrl when transaction committed on other host" in { fixture =>
+//        import fixture._
+//        val fakeIP = 32125
+//        val fakeTxn = TxnRef.parse(s"http://127.0.0.1:$fakeIP/db/data/transaction/1/commit")
+//        val mockWS = mock[WSClient]
+//        val fakeClient = new WSNeo4jClient(mockWS, clientConfig, scheduler, executionContext)
+//        val mockRequest = mock[WSRequest]
+//        val proxyRequest = new ProxyWSRequest(mockRequest, _ => mockRequest)
+//
+//        when(mockWS.url(any())).thenReturn(proxyRequest)
+//
+//        fakeClient.commitTxn(fakeTxn).failed.map {
+//          case ex =>
+//            verify(mockWS, times(1)).url(fakeTxn.url)
+//            Succeeded
+//        }
+//      }
     }
 
   }
