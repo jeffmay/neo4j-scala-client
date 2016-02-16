@@ -17,6 +17,7 @@ lazy val root = (project in file("."))
   ))
 
 // Library versions
+val jawnVersion = "0.8.3"
 val playVersion = "2.4.6"
 val scalacheckVersion = "1.12.5"
 val scalatestVersion = "3.0.0-M10"
@@ -45,7 +46,7 @@ lazy val commonSettings = commonRootSettings ++ Seq(
 
   // Common dependencies
   libraryDependencies ++= Seq(
-    compilerPlugin("org.psywerx.hairyfotr" %% "linter" % "0.1.12"),
+//    compilerPlugin("org.psywerx.hairyfotr" %% "linter" % "0.1.12"),
     "com.typesafe.play" %% "play-json" % playVersion,  // TODO: Allow using other Json libraries
     "org.scalacheck" %% "scalacheck" % scalacheckVersion,
     "org.scalatest" %% "scalatest" % scalatestVersion % "test"
@@ -87,7 +88,9 @@ lazy val ws = (project in file("ws")).settings(commonSettings ++ Seq(
 
   libraryDependencies ++= Seq(
     "com.typesafe.play" %% "play-ws" % playVersion,
-    "org.mockito" % "mockito-core" % "1.10.19"
+    "org.spire-math" %% "jawn-ast" % jawnVersion,
+    "org.spire-math" %% "jawn-parser" % jawnVersion,
+    "org.mockito" % "mockito-core" % "1.10.19" % "test"
   ),
 
   // Cleanup after tests by default
