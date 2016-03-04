@@ -85,8 +85,13 @@ lazy val ws = (project in file("ws")).settings(commonSettings ++ Seq(
 
   name := "neo4j-scala-client-ws",
 
+  resolvers ++= Seq(
+    "Typesafe Extras" at "http://dl.bintray.com/typesafe/maven-releases/com/typesafe/play/extras/"
+  ),
+
   libraryDependencies ++= Seq(
-    "com.typesafe.play" %% "play-ws" % playVersion
+    "com.typesafe.play" %% "play-ws" % playVersion,
+    "com.typesafe.play.extras" %% "iteratees-extras" % "1.5.0"
   ),
 
   // Cleanup after tests by default
