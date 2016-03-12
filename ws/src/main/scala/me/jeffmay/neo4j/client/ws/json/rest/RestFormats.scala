@@ -3,6 +3,7 @@ package me.jeffmay.neo4j.client.ws.json.rest
 import me.jeffmay.neo4j.client.ws.json.SharedFormats
 import play.api.libs.json.{Reads, Json, Writes}
 
+object RestFormats extends RestFormats
 private[json] trait RestFormats extends SharedFormats {
 
   implicit lazy val writesRawRequestStatement: Writes[RawRequestStatement] = Json.writes[RawRequestStatement]

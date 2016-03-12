@@ -1,6 +1,6 @@
 package me.jeffmay.neo4j.client.cypher
 
-import me.jeffmay.neo4j.client.cypher.Cypher.{ImmutableParams, Params}
+import me.jeffmay.neo4j.client.cypher.Cypher.Params
 
 import scala.language.implicitConversions
 import scala.util.Try

@@ -1,8 +1,8 @@
 package me.jeffmay.neo4j.client.cypher
 
+import me.jeffmay.neo4j.client.cypher.scalacheck.CypherGenerators._
 import org.scalatest.WordSpec
 import org.scalatest.prop.GeneratorDrivenPropertyChecks._
-import scalacheck._
 
 class CypherStatementSpec extends WordSpec {
 
