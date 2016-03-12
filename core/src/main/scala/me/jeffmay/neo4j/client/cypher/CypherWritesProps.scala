@@ -33,6 +33,11 @@ trait DefaultCypherWritesProps {
   }
 
   /**
+    * [[Cypher.ImmutableParams]]s can be written as [[CypherProps]].
+    */
+  implicit val writesParamProps: CypherWritesProps[Cypher.ImmutableParams] = CypherWritesProps(_.props)
+
+  /**
     * Any [[CypherProps]] can be implicitly written as a [[CypherProps]].
     */
   implicit val writesCypherProps: CypherWritesProps[CypherProps] = CypherWritesProps(identity)

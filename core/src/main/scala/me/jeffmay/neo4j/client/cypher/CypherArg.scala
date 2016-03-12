@@ -28,6 +28,19 @@ sealed abstract class CypherTemplatePart(override val template: String) extends 
 /**
   * An identifier to refer to nodes, relationships, or paths in a pattern.
   *
+  * For example, the following query
+  * {{{
+  *   val e = Cypher.ident("entity")
+  *   cypher"MATCH $e WHERE $e.id = 1 RETURN $e"
+  * }}}
+  * would serialize as the following template:
+  * {{{
+  *   "MATCH entity WHERE entity.id = 1 RETURN entity"
+  * }}}
+  *
+  * @note This is not constructed directly. Rather, you use the [[Cypher.ident]] method. If the object
+  *       is constructed successfully, then it is a valid identifier.
+  *
   * @see <a href="http://neo4j.com/docs/stable/cypher-identifiers.html">Cypher Identifiers</a>
   * @param name the name of the identifier
   */
@@ -94,7 +107,37 @@ case class CypherParamField private[cypher] (namespace: String, id: String, valu
 /**
   * Holds a single parameter object as one of the [[CypherStatement.parameters]] namespaces.
   *
-  * @note This is not constructed directly. Rather, you use the [[Cypher.params]] methods to build this.
+  * This is short-hand for a collection of [[CypherParamField]]s and only works in certain circumstances.
+  *
+  * For example, a collection of fields would serialize into a [[CypherStatement]] that looks like:
+  * {{{
+  *   {
+  *     "statement": "CREATE (n { id: {props}.id, name: {props}.name })",
+  *     "parameters": {
+  *       "props": {
+  *         "id": 1,
+  *         "name": "myProps"
+  *       }
+  *     }
+  *   }
+  * }}}
+  * And a param object would serialize into a [[CypherStatement]] that looks like:
+  * {{{
+  *   {
+  *     "statement": "CREATE (n { props })",
+  *     "parameters": {
+  *       "props": {
+  *         "id": 1,
+  *         "name": "myProps"
+  *       }
+  *     }
+  *   }
+  * }}}
+  *
+  * @note This does not work when using a MATCH in your query.
+  *
+  * @note This is not constructed directly. Rather, you use one of the [[Cypher.params]] methods.
+  *
   * @param namespace the key of the [[CypherProps]] within which field names are unique
   * @param props the map of fields to unfold as properties in place
   */
