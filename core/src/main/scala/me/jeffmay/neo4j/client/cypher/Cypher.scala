@@ -12,18 +12,26 @@ object Cypher {
   def toProps[T](obj: T)(implicit writer: CypherWrites.Props[T]): CypherProps = writer writes obj
 
   /**
-    * The canonical method to create a [[CypherLabel]] to insert into the cypher query string.
+    * Creates a [[CypherLabel]] to insert into the cypher query string.
     *
     * @return A [[CypherResult]] which can either contain the label or an error.
     */
   def label(name: String): CypherResult[CypherLabel] = CypherLabel(name)
 
   /**
-    * The canonical method to create a [[CypherIdentifier]] to insert into a cypher query string.
+    * Creates a [[CypherIdentifier]] to insert into a cypher query string.
     *
     * @return a [[CypherResult]] which can either contain the identifier or an error
     */
   def ident(name: String): CypherResult[CypherIdentifier] = CypherIdentifier(name)
+
+  /**
+    * Creates a [[CypherParamObject]] to insert into a cypher query string.
+    *
+    * @return always successfully returns a [[CypherParamObject]]
+    */
+  def obj(namespace: String, props: CypherProps): CypherParamObject = CypherParamObject(namespace, props)
+  def obj(params: ImmutableParam): CypherParamObject = CypherParamObject(params.namespace, params.props)
 
   // TODO: Use Li Haoyi's sourcecode macros to get the name of the variable this is assigned to
   //  def params(): Params = new Params("props", Map.empty)

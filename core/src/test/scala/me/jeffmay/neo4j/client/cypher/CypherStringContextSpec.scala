@@ -66,7 +66,7 @@ class CypherStringContextSpec extends WordSpec
 
     "allow property object substitution" in {
       val expectedProps = Cypher.props("id" -> 1, "name" -> "x")
-      val props = Cypher.params("props", expectedProps)
+      val props = Cypher.obj("props", expectedProps)
       val stmt = cypher"MATCH (n $props)"
       assertResult(s"MATCH (n { ${props.namespace} })", "template did not render properly") {
         stmt.template
@@ -76,14 +76,14 @@ class CypherStringContextSpec extends WordSpec
       }
     }
 
-    "allow property substitution for any known cypher props" in {
-      forAll() { (obj: CypherProps) =>
-        val props = Cypher.params("props", obj)
-        val stmt = cypher"MATCH (n $props)"
-        assertResult(s"MATCH (n { ${props.namespace} })", "template did not render properly") {
+    "allow inserting an object for any known cypher props" in {
+      forAll() { (props: CypherProps) =>
+        val obj = Cypher.obj("props", props)
+        val stmt = cypher"MATCH (n $obj)"
+        assertResult(s"MATCH (n { ${obj.namespace} })", "template did not render properly") {
           stmt.template
         }
-        assertResult(Map("props" -> obj)) {
+        assertResult(Map("props" -> props)) {
           stmt.parameters
         }
       }
@@ -91,8 +91,8 @@ class CypherStringContextSpec extends WordSpec
 
     "throw an exception when given two different objects for the same namespace" in {
       val conflictingNamespace = "props"
-      val obj1 = Cypher.params(conflictingNamespace, Cypher.props("id" -> 1, "name" -> "x"))
-      val obj2 = Cypher.params(conflictingNamespace, Cypher.props("id" -> 2, "name" -> "y"))
+      val obj1 = Cypher.obj(conflictingNamespace, Cypher.props("id" -> 1, "name" -> "x"))
+      val obj2 = Cypher.obj(conflictingNamespace, Cypher.props("id" -> 2, "name" -> "y"))
       val ex = intercept[ConflictingParameterObjectsException] {
         cypher"MATCH (n $obj1) --> (m $obj2)"
       }
@@ -106,9 +106,9 @@ class CypherStringContextSpec extends WordSpec
       }
     }
 
-    "throw an exception mixing any mutable and immutable params with the same namespace in the same statement" in {
+    "throw an exception mixing mutable params with an object that has the same namespace in the same statement" in {
       val conflictingNamespace = "props"
-      val obj = Cypher.params(conflictingNamespace, Cypher.props("id" -> 1, "name" -> "x"))
+      val obj = Cypher.obj(conflictingNamespace, Cypher.props("id" -> 1, "name" -> "x"))
       val conflicting = Cypher.params(conflictingNamespace)
       val conflictingKey = "anything"
       val conflictingValue = "doesn't matter"
@@ -126,10 +126,22 @@ class CypherStringContextSpec extends WordSpec
     }
 
     "allow literal substitution for identifiers" in {
-      val n = "n"
-      val nIdent = Cypher.ident("n")
-      val stmt = cypher"MATCH ($nIdent) RETURN $nIdent"
-      assertResult(s"MATCH ($n) RETURN $n", "template did not render properly") {
+      val id = "ident"
+      val ident = Cypher.ident(id)
+      val stmt = cypher"MATCH ($ident) RETURN $ident"
+      assertResult(s"MATCH ($id) RETURN $id", "template did not render properly") {
+        stmt.template
+      }
+      assertResult(Map.empty) {
+        stmt.parameters
+      }
+    }
+
+    "allow literal substitution for params" in {
+      val id = "params"
+      val ident = Cypher.params(id)
+      val stmt = cypher"MATCH ($ident) RETURN $ident"
+      assertResult(s"MATCH ($id) RETURN $id", "template did not render properly") {
         stmt.template
       }
       assertResult(Map.empty) {

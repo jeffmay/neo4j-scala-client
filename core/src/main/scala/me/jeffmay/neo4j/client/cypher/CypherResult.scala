@@ -1,6 +1,6 @@
 package me.jeffmay.neo4j.client.cypher
 
-import me.jeffmay.neo4j.client.cypher.Cypher.ImmutableParam
+import me.jeffmay.neo4j.client.cypher.Cypher.{ImmutableParam, Param}
 
 import scala.language.implicitConversions
 import scala.util.Try
@@ -25,13 +25,13 @@ object CypherResult {
   /**
     * All [[CypherArg]]s are valid [[CypherArg]]s.
     */
-  implicit def valid[T <: CypherArg](arg: T): CypherResultValid[T] = CypherResultValid(arg)
+  implicit def validResult[T <: CypherArg](arg: T): CypherResultValid[T] = CypherResultValid(arg)
 
   /**
-    * All [[ImmutableParam]]s are valid [[CypherArg]]s.
+    * All [[Param]]s can be used as [[CypherIdentifier]]s with the same name as the namespace.
     */
-  implicit def immutableParams(arg: ImmutableParam): CypherResultValid[CypherParamObject] = {
-    CypherResultValid(new CypherParamObject(arg.namespace, arg.props))
+  implicit def paramIdentResult(arg: Param): CypherResult[CypherIdentifier] = {
+    CypherIdentifier(arg.namespace)
   }
 }
 
