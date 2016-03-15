@@ -80,10 +80,33 @@ class WSNeo4jClientBasicSpecs extends fixture.AsyncWordSpec
       "add a single node to the graph" in { fixture =>
         import fixture._
         for {
-          rsp <- client.openAndCommitTxn(CreateNode.query("singleWithoutStats", includeStats = false))
+          rsp <- client.openAndCommitTxn(CreateNode.query("createSingleNode", includeStats = false))
         } yield {
-          assertResult(true, "should not encounter errors") {
-            rsp.errors.isEmpty
+          assert(rsp.errors.isEmpty, "should not encounter errors on create")
+        }
+      }
+
+      "extract a node's properties" in { fixture =>
+        import fixture._
+        val nodeId = "extractNodeProps"
+        for {
+          insert <- client.openAndCommitTxn(CreateNode.query(nodeId))
+          fetch <- client.openAndCommitTxn(FindNode.query(nodeId))
+        } yield {
+          assert(insert.errors.isEmpty, "should not encounter errors on create")
+          fetch.result match {
+            case Right(rs) =>
+              rs.rows.headOption match {
+                case Some(row) =>
+                  assertResult(nodeId) {
+                    (row.col(FindNode.NodeName) \ PropKeys.Id).as[String]
+                  }
+                  assertResult(namespace) {
+                    (row.col(FindNode.NodeName) \ PropKeys.Namespace).as[String]
+                  }
+                case None => fail("Found 0 rows")
+              }
+            case Left(errors) => fail(s"Encountered errors: [${errors.map(Show[Neo4jError].show).mkString(", ")}]")
           }
         }
       }
