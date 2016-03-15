@@ -9,7 +9,7 @@ object Cypher {
   /**
     * Convert the given value to a map of string keys to [[CypherValue]].
     */
-  def toProps[T](obj: T)(implicit writer: CypherWrites.Props[T]): CypherProps = writer writes obj
+  def toProps[T](obj: T)(implicit writer: CypherWrites.AsProps[T]): CypherProps = writer writes obj
 
   /**
     * Creates a [[CypherLabel]] to insert into the cypher query string.
@@ -83,7 +83,7 @@ object Cypher {
       *       in an error.
       * @return a valid [[CypherParamField]]
       */
-    def applyDynamic[T](name: String)(value: T)(implicit writer: CypherWrites.Value[T]): CypherArg = {
+    def applyDynamic[T](name: String)(value: T)(implicit writer: CypherWrites.AsValue[T]): CypherArg = {
       val cypherValue = writer.writes(value)
       new CypherParamField(namespace, name, cypherValue)
     }
@@ -155,7 +155,7 @@ object Cypher {
     def value: CypherValue
   }
   private case class CypherValueWrapperImpl(value: CypherValue) extends CypherValueWrapper
-  implicit def toCypherValueWrapper[T](field: T)(implicit w: CypherWrites.Value[T]): CypherValueWrapper = {
+  implicit def toCypherValueWrapper[T](field: T)(implicit w: CypherWrites.AsValue[T]): CypherValueWrapper = {
     CypherValueWrapperImpl(w.writes(field))
   }
 }

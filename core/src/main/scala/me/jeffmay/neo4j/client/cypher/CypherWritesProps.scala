@@ -6,7 +6,9 @@ import scala.annotation.implicitNotFound
   * A serializer for converting a value into a [[CypherProps]].
   */
 @implicitNotFound(
-  "Cannot find an implicit CypherWritesProps to convert ${T} into CypherProps.")
+  "Cannot find an implicit CypherWritesProps[${T}] to create the CypherProps.\n" +
+    "Note: An implicit is CypherWritesProps[Map[K, V]] is provided automatically wherever there is an " +
+    "implicit CypherWrites[K, CypherString] and CypherWrites.Value[V].")
 trait CypherWritesProps[-T] {
   def writes(value: T): CypherProps
 }
@@ -21,13 +23,15 @@ object CypherWritesProps extends DefaultCypherWritesProps {
 trait DefaultCypherWritesProps {
 
   /**
-    * Writes a Map of String to T as [[CypherProps]].
+    * Writes a Map[K, V], where K can be converted into a String, into [[CypherProps]].
     */
-  implicit def writesMap[T](
-    implicit writer: CypherWritesPrimitive[T]): CypherWritesProps[Map[String, T]] = {
-    new CypherWritesProps[Map[String, T]] {
-      override def writes(values: Map[String, T]): CypherProps = {
-        values.mapValues(writer.writes)
+  implicit def writesMap[K, V](
+    implicit writeK: CypherWrites[K, CypherString], writeV: CypherWrites.AsValue[V]): CypherWritesProps[Map[K, V]] = {
+    new CypherWritesProps[Map[K, V]] {
+      override def writes(values: Map[K, V]): CypherProps = {
+        values.map {
+          case (k, v) => (writeK.writes(k).value, writeV.writes(v))
+        }
       }
     }
   }

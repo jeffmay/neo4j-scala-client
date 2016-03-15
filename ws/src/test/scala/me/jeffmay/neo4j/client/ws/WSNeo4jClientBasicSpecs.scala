@@ -2,6 +2,7 @@ package me.jeffmay.neo4j.client.ws
 
 import me.jeffmay.neo4j.client._
 import me.jeffmay.neo4j.client.cypher.{Cypher, CypherStatement}
+import me.jeffmay.neo4j.client.ws.json.{DebugFormats, ShowAsJson}
 import me.jeffmay.util.UniquePerClassNamespace
 import me.jeffmay.util.akka.TestGlobalAkka
 import org.mockito.Matchers._
@@ -18,7 +19,8 @@ class WSNeo4jClientBasicSpecs extends fixture.AsyncWordSpec
   with AssertResultStats
   with UniquePerClassNamespace {
 
-  import ws.json.debug._
+  import DebugFormats._
+  import ShowAsJson._
 
   override implicit def executionContext: ExecutionContext = ExecutionContext.global
 
