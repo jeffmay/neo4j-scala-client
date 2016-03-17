@@ -1,6 +1,6 @@
 package me.jeffmay.neo4j.client.cypher
 
-import me.jeffmay.neo4j.client.cypher.Cypher.Params
+import me.jeffmay.neo4j.client.cypher.Cypher.Param
 
 import scala.language.implicitConversions
 import scala.util.Try
@@ -28,9 +28,9 @@ object CypherResult {
   implicit def validResult[T <: CypherArg](arg: T): CypherResultValid[T] = CypherResultValid(arg)
 
   /**
-    * All [[Params]]s can be used as [[CypherIdentifier]]s with the same name as the namespace.
+    * All [[Param]]s can be used as [[CypherIdentifier]]s with the same name as the namespace.
     */
-  implicit def paramIdentResult(arg: Params): CypherResult[CypherIdentifier] = {
+  implicit def paramIdentResult(arg: Param): CypherResult[CypherIdentifier] = {
     CypherIdentifier(arg.namespace)
   }
 }
