@@ -31,22 +31,24 @@ object Cypher {
     * @return always successfully returns a [[CypherParamObject]]
     */
   def obj(namespace: String, props: CypherProps): CypherParamObject = CypherParamObject(namespace, props)
-  def obj(params: ImmutableParams): CypherParamObject = CypherParamObject(params.namespace, params.props)
+  def obj(params: ImmutableParam): CypherParamObject = CypherParamObject(params.namespace, params.props)
 
   // TODO: Use Li Haoyi's sourcecode macros to get the name of the variable this is assigned to
   //  def params(): Params = new Params("props", Map.empty)
 
   /**
-    * @see [[DynamicMutableParams]]
+    * @see [[DynamicMutableParam]]
     */
-  def params(namespace: String): DynamicMutableParams = new DynamicMutableParams(namespace)
+  def param(namespace: String): DynamicMutableParam = new DynamicMutableParam(namespace)
+  @deprecated("Use Cypher.param instead. A parameter is a single entry in the CypherParams map, so singular is preferred.", "0.7.0")
+  def params(namespace: String): DynamicMutableParam = new DynamicMutableParam(namespace)
 
   /**
     * Used to insert cypher-injection-safe parameters into a [[CypherStatement]].
     *
     * @param namespace the namespace to which all parameters inserted by this class share
     */
-  sealed abstract class Params(val namespace: String) {
+  sealed abstract class Param(val namespace: String) {
     def isMutable: Boolean
     protected def __clsName: String
     override def toString: String = s"${__clsName}(namespace = $namespace)"
@@ -69,8 +71,8 @@ object Cypher {
     *
     * @return a dynamic parameters builder for embedding into [[CypherStringContext]] interpolated [[CypherStatement]]s
     */
-  class DynamicMutableParams private[Cypher](namespace: String)
-    extends Params(namespace) with Dynamic {
+  class DynamicMutableParam private[Cypher](namespace: String)
+    extends Param(namespace) with Dynamic {
 
     final override def isMutable: Boolean = true
 
@@ -90,9 +92,9 @@ object Cypher {
   }
 
   /**
-    * @see [[DynamicImmutableParams]]
+    * @see [[DynamicImmutableParam]]
     */
-  def params(namespace: String, props: CypherProps): DynamicImmutableParams = new DynamicImmutableParams(namespace, props)
+  def params(namespace: String, props: CypherProps): DynamicImmutableParam = new DynamicImmutableParam(namespace, props)
 
   /**
     * Immutable params cannot share the same namespace with other params in the same [[CypherStatement]]
@@ -101,8 +103,8 @@ object Cypher {
     * @param namespace the namespace to which all parameters inserted by this class share
     * @param props the properties of the parameter object
     */
-  sealed abstract class ImmutableParams(namespace: String, val props: CypherProps)(implicit showProps: Show[CypherProps])
-    extends Params(namespace) with Proxy {
+  sealed abstract class ImmutableParam(namespace: String, val props: CypherProps)(implicit showProps: Show[CypherProps])
+    extends Param(namespace) with Proxy {
     final override def isMutable: Boolean = false
     override def self: Any = (namespace, props)
     override def toString: String = s"${__clsName}(namespace = $namespace, props = ${showProps show props})"
@@ -124,8 +126,8 @@ object Cypher {
     *
     * @return a dynamic parameters builder for embedding into [[CypherStringContext]] interpolated [[CypherStatement]]s
     */
-  class DynamicImmutableParams private[Cypher](namespace: String, props: CypherProps)
-    extends ImmutableParams(namespace, props) with Dynamic {
+  class DynamicImmutableParam private[Cypher](namespace: String, props: CypherProps)
+    extends ImmutableParam(namespace, props) with Dynamic {
 
     final override protected def __clsName: String = "SelectDynamicParam"
 
