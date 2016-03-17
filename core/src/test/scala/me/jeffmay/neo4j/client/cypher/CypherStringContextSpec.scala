@@ -10,7 +10,7 @@ class CypherStringContextSpec extends WordSpec
   "CypherStringContext" should {
 
     "allow param substitution in-place" in {
-      val props = Cypher.params("props")
+      val props = Cypher.param("props")
       val stmt = cypher"MATCH (n { id: ${props.id(1)}, name: ${props.name("x")} })"
       assertResult(
         s"MATCH (n { id: {${props.namespace}}.id, name: {${props.namespace}}.name })",
@@ -25,7 +25,7 @@ class CypherStringContextSpec extends WordSpec
 
     "allow param substitution for any CypherValue" in {
       forAll() { (value: CypherValue) =>
-        val props = Cypher.params("props")
+        val props = Cypher.param("props")
         val stmt = cypher"MATCH (n { id: ${props.id(value)} })"
         assertResult(s"MATCH (n { id: {${props.namespace}}.id })", "template did not render properly") {
           stmt.template
@@ -40,7 +40,7 @@ class CypherStringContextSpec extends WordSpec
     "allow param substitution for a writeable type" in {
       import ExampleWriteable._
       val value = ExampleWriteable("value")
-      val props = Cypher.params("props")
+      val props = Cypher.param("props")
       val stmt = cypher"MATCH (n { id: ${props.id(value)} })"
       assertResult(s"MATCH (n { id: {${props.namespace}}.id })", "template did not render properly") {
         stmt.template
@@ -54,7 +54,7 @@ class CypherStringContextSpec extends WordSpec
     "allow param substitution for a Traversable of writeable type values" in {
       val values = Seq(1, 2, 3).map(n => ExampleWriteable(n.toString))
       val expectedProps = Cypher.props("values" -> values)
-      val props = Cypher.params("props", expectedProps)
+      val props = Cypher.param("props", expectedProps)
       val stmt = cypher"MATCH (n) WHERE n IN ${props.values}"
       assertResult(s"MATCH (n) WHERE n IN {${props.namespace}}.values", "template did not render properly") {
         stmt.template
@@ -66,7 +66,7 @@ class CypherStringContextSpec extends WordSpec
 
     "allow property object substitution" in {
       val expectedProps = Cypher.props("id" -> 1, "name" -> "x")
-      val props = Cypher.obj("props", expectedProps)
+      val props = Cypher.obj(Cypher.param("props", expectedProps))
       val stmt = cypher"MATCH (n $props)"
       assertResult(s"MATCH (n { ${props.namespace} })", "template did not render properly") {
         stmt.template
@@ -109,7 +109,7 @@ class CypherStringContextSpec extends WordSpec
     "throw an exception mixing mutable params with an object that has the same namespace in the same statement" in {
       val conflictingNamespace = "props"
       val obj = Cypher.obj(conflictingNamespace, Cypher.props("id" -> 1, "name" -> "x"))
-      val conflicting = Cypher.params(conflictingNamespace)
+      val conflicting = Cypher.param(conflictingNamespace)
       val conflictingKey = "anything"
       val conflictingValue = "doesn't matter"
       val ex = intercept[MutatedParameterObjectException] {
@@ -139,7 +139,7 @@ class CypherStringContextSpec extends WordSpec
 
     "allow literal substitution for params" in {
       val id = "params"
-      val ident = Cypher.params(id)
+      val ident = Cypher.param(id)
       val stmt = cypher"MATCH ($ident) RETURN $ident"
       assertResult(s"MATCH ($id) RETURN $id", "template did not render properly") {
         stmt.template

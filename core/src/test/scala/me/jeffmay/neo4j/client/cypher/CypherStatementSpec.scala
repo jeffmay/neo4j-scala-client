@@ -11,7 +11,7 @@ class CypherStatementSpec extends WordSpec {
     "interpolated" should {
 
       "allowed merging parameters that share the same namespace and key and they have the same value" in {
-        val props = Cypher.params("props")
+        val props = Cypher.param("props")
         val value = props.ref(1)
         assertResult(CypherStatement(
           "MATCH (n { ref: {props}.ref }) --> (m { ref: {props}.ref })",
@@ -22,7 +22,7 @@ class CypherStatementSpec extends WordSpec {
       }
 
       "throw an exception when statement parameters share the same namespace and key but with different values" in {
-        val props = Cypher.params("props")
+        val props = Cypher.param("props")
         val ex = intercept[ConflictingParameterFieldsException] {
           cypher"MATCH (n { ref: ${props.ref(1)} }) --> (m { ref: ${props.ref(2)} })"
         }
@@ -45,7 +45,7 @@ class CypherStatementSpec extends WordSpec {
       }
 
       "allowed merging parameters that share the same namespace and key and they have the same value" in {
-        val props = Cypher.params("props")
+        val props = Cypher.param("props")
         val value = props.ref(1)
         assertResult(CypherStatement(
           "MATCH (n { ref: {props}.ref }) --> (m { ref: {props}.ref })",
@@ -56,7 +56,7 @@ class CypherStatementSpec extends WordSpec {
       }
 
       "throw an exception when statement parameters share the same namespace and key but with different values" in {
-        val props = Cypher.params("props")
+        val props = Cypher.param("props")
         val ex = intercept[ConflictingParameterFieldsException] {
           cypher"MATCH (n { ref: ${props.ref(1)} })" :+: cypher" --> (m { ref: ${props.ref(2)} })"
         }
@@ -68,7 +68,7 @@ class CypherStatementSpec extends WordSpec {
           val expectedParams = params.filter(_._2.nonEmpty)
           val result = params.foldLeft(cypher"") {
             case (acc, (ns, propValues)) =>
-              val props = Cypher.params(ns)
+              val props = Cypher.param(ns)
               propValues.foldLeft(acc) {
                 case (c, (k, v)) => c :+: cypher"${props.applyDynamic(k)(v)}"
               }

@@ -94,6 +94,8 @@ object Cypher {
   /**
     * @see [[DynamicImmutableParam]]
     */
+  def param(namespace: String, props: CypherProps): DynamicImmutableParam = new DynamicImmutableParam(namespace, props)
+  @deprecated("Use Cypher.param instead. A parameter is a single entry in the CypherParams map, so singular is preferred.", "0.7.0")
   def params(namespace: String, props: CypherProps): DynamicImmutableParam = new DynamicImmutableParam(namespace, props)
 
   /**
