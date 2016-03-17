@@ -1,5 +1,7 @@
 package me.jeffmay.neo4j.client.cypher
 
+import scala.util.matching.Regex
+
 /**
   * A valid argument to pass into the [[CypherStringContext]] used to insert some literal string or parameter(s)
   * into a Cypher [[CypherStatement]].
@@ -47,7 +49,8 @@ sealed abstract class CypherTemplatePart(override val template: String) extends 
 final class CypherIdentifier private (name: String) extends CypherTemplatePart(name)
 object CypherIdentifier {
 
-  val Valid = "^[a-zA-Z][a-zA-Z0-9_]*$".r
+  private[cypher] val ValidChars: String = "[a-zA-Z][a-zA-Z0-9_]*"
+  private[cypher] val Valid: Regex = s"^$ValidChars$$".r
 
   def isValid(literal: String): Boolean = {
     Valid.findFirstMatchIn(literal).isDefined
@@ -71,7 +74,8 @@ object CypherIdentifier {
 final class CypherLabel private (name: String) extends CypherTemplatePart(s":$name")
 object CypherLabel {
 
-  val Valid = "^[a-zA-Z0-9_]+$".r
+  private[cypher] val ValidChars: String = "[a-zA-Z0-9_]+"
+  private[cypher] val Valid: Regex = s"^$ValidChars$$".r
 
   private[this] var validated: Map[String, CypherLabel] = Map.empty
 
@@ -93,6 +97,22 @@ object CypherLabel {
 }
 
 /**
+  * Marker trait for all [[CypherArg]]s that add [[CypherProps]] to a namespace.
+  */
+sealed trait CypherParamArg extends CypherArg {
+
+  /**
+    * The namespace in which the [[CypherProps]] live.
+    */
+  def namespace: String
+
+  /**
+    * Extract the properties provided by this parameter.
+    */
+  def toProps: CypherProps
+}
+
+/**
   * Holds a single parameter field within one of the [[CypherStatement.parameters]] namespaces.
   *
   * @note This is not constructed directly. Rather, you use the [[Cypher.params]] methods to build this.
@@ -100,8 +120,11 @@ object CypherLabel {
   * @param id the field name within the namespace
   * @param value the value of the parameter object's field
   */
-case class CypherParamField private[cypher] (namespace: String, id: String, value: CypherValue) extends CypherArg {
+case class CypherParamField private[cypher] (namespace: String, id: String, value: CypherValue) extends CypherParamArg {
+
   override val template: String = s"{$namespace}.$id"
+
+  override def toProps: CypherProps = Map(id -> value)
 }
 
 /**
@@ -141,6 +164,16 @@ case class CypherParamField private[cypher] (namespace: String, id: String, valu
   * @param namespace the key of the [[CypherProps]] within which field names are unique
   * @param props the map of fields to unfold as properties in place
   */
-case class CypherParamObject private[cypher] (namespace: String, props: CypherProps) extends CypherArg {
+case class CypherParamObject private[cypher] (namespace: String, props: CypherProps) extends CypherParamArg {
   override val template: String = s"{ $namespace }"
+  override def toProps: CypherProps = props
+}
+
+/**
+  * Represents a fragment of cypher query to embed into another [[CypherStatement]].
+  *
+  * @param statement the fragment of template and any embedded [[CypherParams]].
+  */
+case class CypherStatementFragment private[cypher] (statement: CypherStatement) extends CypherArg {
+  override def template: String = statement.template
 }

@@ -102,7 +102,7 @@ class CypherStringContextSpec extends WordSpec
         ex.template
       }
       assertResult(Seq(obj1.props, obj2.props)) {
-        ex.conflictingParams
+        ex.conflictingProps
       }
     }
 
@@ -112,7 +112,7 @@ class CypherStringContextSpec extends WordSpec
       val conflicting = Cypher.param(conflictingNamespace)
       val conflictingKey = "anything"
       val conflictingValue = "doesn't matter"
-      val ex = intercept[MutatedParameterObjectException] {
+      val ex = intercept[MixedParamReferenceException] {
         cypher"MATCH (n $obj) --> (m { id: ${conflicting.applyDynamic(conflictingKey)(conflictingValue)} })"
       }
       assertResult(
@@ -120,8 +120,8 @@ class CypherStringContextSpec extends WordSpec
         "template did not render properly") {
         ex.template
       }
-      assertResult(Seq(obj.props, Cypher.props(conflictingKey -> conflictingValue))) {
-        ex.conflictingParams
+      assertResult(Set(conflictingKey)) {
+        ex.conflictingFieldReferences
       }
     }
 
@@ -163,7 +163,7 @@ class CypherStringContextSpec extends WordSpec
     "throw an exception with all invalid cypher arguments included as suppressed exceptions" in {
       val invalidLabelName = ":INVALID"
       val invalid = Cypher.label(invalidLabelName)
-      val ex = intercept[InvalidCypherException](cypher"MATCH (n $invalid) RETURN n")
+      val ex = intercept[CypherResultException](cypher"MATCH (n $invalid) RETURN n")
       assertResult(Some("MATCH (n |INVALID[1]|) RETURN n")) {
         ex.template
       }

@@ -12,7 +12,30 @@ object Cypher {
   def toProps[T](obj: T)(implicit writer: CypherWrites.AsProps[T]): CypherProps = writer writes obj
 
   /**
-    * Creates a [[CypherLabel]] to insert into the cypher query string.
+    * Creates a [[CypherStatementFragment]] to insert into a cypher query string for matching on the properties
+    * of a node.
+    *
+    * @param param the param object to expand into properties
+    * @param chopAndIndent whether to chop down and indent the properties with the given number of spaces
+    *
+    * @return a fragment of a [[CypherStatement]] that can be embedded into the properties selector of a node
+    */
+  def expand(param: ImmutableParam, chopAndIndent: Option[Int] = None): CypherStatementFragment = {
+    val propTemplates = param.props.map {
+      case (k, v) => s"$k: {${param.namespace}}.$k"
+    }
+    val template = chopAndIndent match {
+      case Some(indentWidth) =>
+        val shim = new String(Array.fill(indentWidth)(' '))
+        propTemplates.mkString(s",\n$shim")
+      case None =>
+        propTemplates.mkString(", ")
+    }
+    CypherStatementFragment(CypherStatement(template, Map(param.namespace -> param.props)))
+  }
+
+  /**
+    * Creates a [[CypherLabel]] to insert into a cypher query string.
     *
     * @return A [[CypherResult]] which can either contain the label or an error.
     */
@@ -30,6 +53,7 @@ object Cypher {
     *
     * @return always successfully returns a [[CypherParamObject]]
     */
+  @deprecated("Use Cypher.obj(Cypher.params(namespace, props))", "0.8.0")
   def obj(namespace: String, props: CypherProps): CypherParamObject = CypherParamObject(namespace, props)
   def obj(params: ImmutableParam): CypherParamObject = CypherParamObject(params.namespace, params.props)
 
@@ -49,6 +73,7 @@ object Cypher {
     * @param namespace the namespace to which all parameters inserted by this class share
     */
   sealed abstract class Param(val namespace: String) {
+    require(!namespace.isEmpty, "Cypher.param() namespace cannot be empty string")
     def isMutable: Boolean
     protected def __clsName: String
     override def toString: String = s"${__clsName}(namespace = $namespace)"
@@ -107,6 +132,7 @@ object Cypher {
     */
   sealed abstract class ImmutableParam(namespace: String, val props: CypherProps)(implicit showProps: Show[CypherProps])
     extends Param(namespace) with Proxy {
+    def toParams: CypherParams = Map(namespace -> props)
     final override def isMutable: Boolean = false
     override def self: Any = (namespace, props)
     override def toString: String = s"${__clsName}(namespace = $namespace, props = ${showProps show props})"
