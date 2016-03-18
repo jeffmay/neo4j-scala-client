@@ -1,6 +1,6 @@
 package me.jeffmay.neo4j.client
 
-import me.jeffmay.neo4j.client.cypher.{Cypher, CypherStatement}
+import me.jeffmay.neo4j.client.cypher.{CypherProps, Cypher, CypherStatement}
 import me.jeffmay.util.Namespace
 
 object FixtureQueries extends FixtureQueries
@@ -19,15 +19,14 @@ trait FixtureQueries {
    * Each query has some pre-conditions / post-conditions for the expected success result stats to work.
    */
 
-  object CreateNode {
-    def query(id: String, includeStats: Boolean = true)(implicit ns: Namespace): CypherStatement = {
+  case object CreateNode {
+    def query(id: String)(implicit ns: Namespace): CypherStatement = {
       CypherStatement(
         s"CREATE (n { ns: {props}.ns, ${PropKeys.Id}: {props}.id })",
         Map("props" -> Cypher.props(
           "id" -> id,
           "ns" -> ns.value
-        )),
-        includeStats = includeStats
+        ))
       )
     }
     val successResultStats: StatementResultStats = {
@@ -35,16 +34,32 @@ trait FixtureQueries {
     }
   }
 
-  object FindNode {
+  case object CreateNodeWithPropsObject {
+    def cleanup()(implicit ns: Namespace): CypherStatement = {
+      CypherStatement(
+        s"MATCH (n :${ns.value}) DELETE n"
+      )
+    }
+    def query(props: CypherProps)(implicit ns: Namespace): CypherStatement = {
+      CypherStatement(
+        s"CREATE (n :${ns.value} { props })",
+        Map("props" -> props)
+      )
+    }
+    val successResultStats: StatementResultStats = {
+      StatementResultStats.empty.copy(containsUpdates = true, nodesCreated = 1, propertiesSet = 2)
+    }
+  }
+
+  case object FindNode {
     val NodeName = "n"
-    def query(id: String, includeStats: Boolean = false)(implicit ns: Namespace): CypherStatement = {
+    def query(id: String)(implicit ns: Namespace): CypherStatement = {
       CypherStatement(
         s"MATCH ($NodeName { ns: {props}.ns, ${PropKeys.Id}: {props}.id }) RETURN $NodeName",
         Map("props" -> Cypher.props(
           "id" -> id,
           "ns" -> ns.value
-        )),
-        includeStats = includeStats
+        ))
       )
     }
     val successResultStats: StatementResultStats = {
@@ -52,8 +67,8 @@ trait FixtureQueries {
     }
   }
 
-  object RenameNode {
-    def query(id: String, newId: String, includeStats: Boolean = true)(implicit ns: Namespace): CypherStatement = {
+  case object RenameNode {
+    def query(id: String, newId: String)(implicit ns: Namespace): CypherStatement = {
       CypherStatement(
         s"MATCH (n { ns: {props}.ns, ${PropKeys.Id}: {props}.id }) SET n.${PropKeys.Id} = {new}.id",
         Map(
@@ -64,8 +79,7 @@ trait FixtureQueries {
           "new" -> Cypher.props(
             "id" -> newId
           )
-        ),
-        includeStats = includeStats
+        )
       )
     }
     val successResultStats: StatementResultStats = {
@@ -73,8 +87,8 @@ trait FixtureQueries {
     }
   }
 
-  object AddLabel {
-    def query(id: String, label: String, includeStats: Boolean = true)(implicit ns: Namespace): CypherStatement = {
+  case object AddLabel {
+    def query(id: String, label: String)(implicit ns: Namespace): CypherStatement = {
       CypherStatement(
         s"MATCH (n { ns: {props}.ns, ${PropKeys.Id}: {props}.id }) SET n ${Cypher.label(label).getOrThrow.template}",
         Map(
@@ -82,8 +96,7 @@ trait FixtureQueries {
             "id" -> id,
             "ns" -> ns.value
           )
-        ),
-        includeStats = includeStats
+        )
       )
     }
     val successResultStats: StatementResultStats = {
