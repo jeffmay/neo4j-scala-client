@@ -3,7 +3,7 @@ lazy val commonRootSettings = Seq(
   organization := "me.jeffmay",
   organizationName := "Jeff May",
 
-  version := "0.6.0",
+  version := "0.7.0",
   scalaVersion := "2.11.7",
 
   licenses += ("Apache-2.0", url("http://opensource.org/licenses/apache-2.0"))
