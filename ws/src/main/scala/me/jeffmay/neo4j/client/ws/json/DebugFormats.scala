@@ -6,7 +6,7 @@ import me.jeffmay.neo4j.client.ws.json.rest._
 import play.api.libs.json._
 
 object DebugFormats extends DebugFormats
-private[json] trait DebugFormats extends SharedFormats {
+private[ws] trait DebugFormats extends SharedFormats {
 
   /*
    * Core model formats

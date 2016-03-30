@@ -33,6 +33,13 @@ object CypherResult {
   implicit def paramIdentResult(arg: Param): CypherResult[CypherIdentifier] = {
     CypherIdentifier(arg.namespace)
   }
+
+  /**
+    * All [[CypherStatement]]s can be embedded into other statements as [[CypherStatementFragment]]s.
+    */
+  implicit def embedCypherStatement(stmt: CypherStatement): CypherResultValid[CypherStatementFragment] = {
+    CypherResultValid(CypherStatementFragment(stmt))
+  }
 }
 
 /**
@@ -53,7 +60,7 @@ case class CypherResultValid[+T <: CypherArg](result: T) extends CypherResult[T]
   */
 case class CypherResultInvalid(result: InvalidCypherArg) extends CypherResult[Nothing] {
   // Construct the exception on instantiation to insure that the stack-trace captures where the failure occurs.
-  val exception: Throwable = new InvalidCypherException(result.message, result.template)
+  val exception: Throwable = new CypherResultException(result.message, result.template)
   final override def isValid: Boolean = false
   final override def getOrThrow: Nothing = throw exception
 }
