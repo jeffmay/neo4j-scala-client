@@ -2,7 +2,7 @@
 A Scala-based driver for interfacing with a stand-alone Neo4j server over HTTP and websockets
 
 <a href='https://travis-ci.org/jeffmay/neo4j-scala-client'>
-  <img src='https://travis-ci.org/jeffmay/neo4j-scala-client.svg' alt='Build Status' />
+  <img src='https://travis-ci.org/jeffmay/neo4j-scala-client.svg?branch=master' alt='Build Status' />
 </a>
 <a href='https://coveralls.io/github/jeffmay/neo4j-scala-client?branch=master'>
   <img src='https://coveralls.io/repos/jeffmay/neo4j-scala-client/badge.svg?branch=master&service=github' alt='Coverage Status' />
